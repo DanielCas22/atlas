@@ -2,8 +2,8 @@
 
 <h1>Listado de Exámenes</h1>
 <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
-    <a class="btn" href="index.php?c=dashboard&a=index">← Volver al Dashboard</a>
-    <a class="btn btn-success" href="index.php?c=exam&a=add" style="margin-right: 0;">+ Importar Pacientes</a>
+    <a class="btn" href="index.php?c=dashboard&a=index"><i class="bi bi-arrow-left"></i> Volver al Dashboard</a>
+    <a class="btn btn-success" href="index.php?c=exam&a=add" style="margin-right: 0;"><i class="bi bi-upload"></i> Importar Pacientes</a>
 </div>
 
 <div style="overflow-x: auto; border-radius: 8px;">
@@ -43,8 +43,9 @@
                 ?></td>
                 <td><?= htmlspecialchars($exam['order_number'] ?? '') ?></td>
                 <td>
-                    <a class="btn btn-warning" href="index.php?c=exam&a=edit&id=<?= $exam['id'] ?>">Editar</a>
-                    <a class="btn btn-danger" href="index.php?c=exam&a=delete&id=<?= $exam['id'] ?>" onclick="return confirm('¿Eliminar paciente?');">Eliminar</a>
+                    <a class="btn-small" style="background:#e0e0e0;color:#000;text-decoration:underline;padding:2px 8px;border-radius:4px;margin-right:2px;" href="index.php?c=exam&a=view&id=<?= $exam['id'] ?>"><i class="bi bi-eye"></i> <u>Ver</u></a>
+                    <a class="btn-small" style="background:#e0e0e0;color:#000;text-decoration:underline;padding:2px 8px;border-radius:4px;margin-right:2px;" href="index.php?c=exam&a=edit&id=<?= $exam['id'] ?>"><i class="bi bi-pencil"></i> <u>Editar</u></a>
+                    <a class="btn-small btn-danger" style="background:#d98880;color:#000;text-decoration:underline;padding:2px 8px;border-radius:4px;" href="index.php?c=exam&a=delete&id=<?= $exam['id'] ?>" onclick="return confirm('¿Eliminar paciente?');"><i class="bi bi-trash"></i> <u>Eliminar</u></a>
                 </td>
             </tr>
         <?php endforeach; ?>

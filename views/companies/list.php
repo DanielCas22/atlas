@@ -31,9 +31,9 @@
                 <td><?= htmlspecialchars($company['name']) ?></td>
                 <td><?= $company['exam_count'] ?></td>
                 <td>
-                    <a class="btn-small" href="index.php?c=company&a=view&id=<?= $company['id'] ?>">Ver</a>
-                    <a class="btn-small" href="index.php?c=company&a=edit&id=<?= $company['id'] ?>">Editar</a>
-                    <a class="btn-small btn-danger" href="index.php?c=company&a=delete&id=<?= $company['id'] ?>" onclick="return confirm('¿Está seguro?')">Eliminar</a>
+                    <a class="btn-small" style="background:#e0e0e0;color:#000;text-decoration:underline;padding:2px 8px;border-radius:4px;margin-right:2px;" href="index.php?c=company&a=view&id=<?= $company['id'] ?>"><i class="bi bi-eye"></i> <u>Ver</u></a>
+                    <a class="btn-small" style="background:#e0e0e0;color:#000;text-decoration:underline;padding:2px 8px;border-radius:4px;margin-right:2px;" href="index.php?c=company&a=edit&id=<?= $company['id'] ?>"><i class="bi bi-pencil"></i> <u>Editar</u></a>
+                    <a class="btn-small btn-danger" style="background:#d98880;color:#000;text-decoration:underline;padding:2px 8px;border-radius:4px;" href="index.php?c=company&a=delete&id=<?= $company['id'] ?>" onclick="return confirm('¿Está seguro?')"><i class="bi bi-trash"></i> <u>Eliminar</u></a>
                 </td>
             </tr>
         <?php endforeach; ?>
