@@ -3,6 +3,13 @@
 CREATE DATABASE IF NOT EXISTS atlas CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE atlas;
 
+-- Drop tables if exist to avoid conflicts
+DROP TABLE IF EXISTS exams;
+DROP TABLE IF EXISTS security_companies;
+DROP TABLE IF EXISTS exam_types;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS roles;
+
 -- Roles (admin, supervisor, operador)
 CREATE TABLE IF NOT EXISTS roles (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -42,6 +49,12 @@ CREATE TABLE IF NOT EXISTS exams (
   company_id INT NOT NULL,
   exam_type_id INT NOT NULL,
   candidate_name VARCHAR(120) NOT NULL,
+  document_number VARCHAR(50) DEFAULT NULL,
+  phone VARCHAR(20) DEFAULT NULL,
+  gender ENUM('M','F') DEFAULT NULL,
+  birth_date DATE DEFAULT NULL,
+  exam_date DATE DEFAULT NULL,
+  order_number VARCHAR(50) DEFAULT NULL,
   status ENUM('PENDIENTE','EN_CURSO','FINALIZADO','RECHAZADO') NOT NULL DEFAULT 'PENDIENTE',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NULL,
@@ -56,18 +69,11 @@ INSERT IGNORE INTO roles (id,name,description) VALUES
 (3,'OPERADOR','Operador de registro');
 
 INSERT IGNORE INTO users (role_id,username,password,fullname,email) VALUES
-(1,'admin', '$2y$10$K1u/RUAi3z1JczLZG2vWbO8cM4Z4X2VorPM0z6Oe9bG0M.dmy9Fn6', 'Admin Atlas', 'admin@atlas.local');
--- password: admin123
+(1,'admin', '$2y$10$K1u/RUAi3z1JczLZG2vWbO8cM4Z4X2VorPM0z6Oe9bG0M.dmy9Fn6', 'Admin Atlas', 'admin@atlas.local'),
+(1,'programador', '$2y$10$I2j9ZgVoPHBVisBAkPCNEuCgwSlBxsDvMNSMseKFINpgxt1xnIwyW', 'Programador Atlas', 'programador@atlas.local');
+-- password: admin123 / programador: daniel913
 
 INSERT IGNORE INTO exam_types (name,description) VALUES
 ('Chequeo psicométrico','Evaluación psicológica'),
 ('Examen médico','Chequeo médico general'),
 ('Investigación de antecedentes','Verificación de antecedentes');
-
-INSERT IGNORE INTO security_companies (name,contact) VALUES
-('SegurGlobal','contacto@segurglobal.com'),
-('ProtecMax','info@protecmax.com');
-
-INSERT IGNORE INTO exams (company_id,exam_type_id,candidate_name,status) VALUES
-(1,1,'Juan Pérez','PENDIENTE'),
-(2,2,'María López','EN_CURSO');

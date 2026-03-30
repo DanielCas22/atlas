@@ -1,13 +1,20 @@
 <?php
 session_start();
 
+// Evitar cache para que el botón "atrás" no vuelva a mostrar páginas autenticadas
+header('Cache-Control: no-cache, no-store, must-revalidate'); // HTTP 1.1
+header('Pragma: no-cache'); // HTTP 1.0
+header('Expires: 0'); // Proxies
+
 require_once __DIR__ . '/config/Database.php';
 require_once __DIR__ . '/models/BaseModel.php';
 require_once __DIR__ . '/models/UserModel.php';
 require_once __DIR__ . '/models/ExamModel.php';
+require_once __DIR__ . '/models/CompanyModel.php';
 require_once __DIR__ . '/controllers/AuthController.php';
 require_once __DIR__ . '/controllers/DashboardController.php';
 require_once __DIR__ . '/controllers/ExamController.php';
+require_once __DIR__ . '/controllers/CompanyController.php';
 
 $controller = $_GET['c'] ?? 'auth';
 $action = $_GET['a'] ?? 'login';
@@ -21,6 +28,9 @@ switch ($controller) {
         break;
     case 'exam':
         $ctrl = new ExamController();
+        break;
+    case 'company':
+        $ctrl = new CompanyController();
         break;
     default:
         http_response_code(404);
