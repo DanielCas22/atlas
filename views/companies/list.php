@@ -11,9 +11,14 @@
                     </h1>
                     <p class="text-muted mb-0">Administra las empresas y sus exámenes médicos</p>
                 </div>
-                <a href="index.php?c=company&a=add" class="btn btn-primary">
-                    <i class="bi bi-plus-circle me-2"></i>Agregar Empresa
-                </a>
+                <div class="d-flex gap-2">
+                    <a href="index.php?c=dashboard&a=index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Volver
+                    </a>
+                    <a href="index.php?c=company&a=add" class="btn btn-primary">
+                        <i class="bi bi-plus-circle me-2"></i>Agregar Empresa
+                    </a>
+                </div>
             </div>
         </div>
     </div>

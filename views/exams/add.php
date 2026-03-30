@@ -1,7 +1,7 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 
 <h1>Agregar examen</h1>
-<p><a class="btn" href="index.php?c=dashboard&a=index">Volver al Dashboard</a></p>
+<p><a class="btn" href="index.php?c=dashboard&a=index">Volver</a></p>
 
 <?php if (!empty($error)): ?>
     <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>

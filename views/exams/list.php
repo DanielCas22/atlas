@@ -16,7 +16,7 @@
                         <i class="bi bi-plus-circle me-2"></i>Importar Pacientes
                     </a>
                     <a href="index.php?c=dashboard&a=index" class="btn btn-outline-secondary">
-                        <i class="bi bi-arrow-left me-2"></i>Dashboard
+                        <i class="bi bi-arrow-left me-2"></i>Volver
                     </a>
                 </div>
             </div>

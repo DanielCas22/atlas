@@ -17,6 +17,8 @@
             <small class="text-muted ms-1 d-none d-sm-inline">Seguridad</small>
         </a>
 
+        <span class="fw-semibold ms-3" style="color:#fff;">Atlas Seguridad - Sistema de Gestión de Exámenes</span>
+
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -26,7 +28,7 @@
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
                     <a class="nav-link" href="index.php?c=dashboard&a=index">
-                        <i class="bi bi-house-door me-1"></i>Dashboard
+                        <i class="bi bi-house-door me-1"></i>Inicio
                     </a>
                 </li>
                 <li class="nav-item">
@@ -47,13 +49,6 @@
             </ul>
 
             <div class="d-flex align-items-center">
-                <button id="theme-toggle" class="theme-switch me-3" aria-label="Cambiar tema" title="Cambiar tema">
-                    <span class="theme-switch__track"></span>
-                    <span class="theme-switch__thumb"></span>
-                    <span class="theme-switch__icon theme-switch__icon--light" aria-hidden="true">☀</span>
-                    <span class="theme-switch__icon theme-switch__icon--dark" aria-hidden="true">🌙</span>
-                </button>
-
                 <div class="dropdown">
                     <button class="btn btn-outline-light dropdown-toggle border-0 bg-transparent" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-person-circle me-1"></i>
