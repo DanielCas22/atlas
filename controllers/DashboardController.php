@@ -161,6 +161,178 @@ class DashboardController
         include __DIR__ . '/../views/dashboard/create_user.php';
     }
 
+    public function clasificacion_empresas()
+    {
+        $this->ensureAuth();
+
+        $results = null;
+        $error = null;
+        $success = null;
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Validar que se haya subido un archivo
+            if (!isset($_FILES['excel_file']) || $_FILES['excel_file']['error'] !== UPLOAD_ERR_OK) {
+                $error = 'Por favor selecciona un archivo válido.';
+            } else {
+                try {
+                    $filePath = $_FILES['excel_file']['tmp_name'];
+                    $fileName = $_FILES['excel_file']['name'];
+                    $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+                    // Validar extensión
+                    if (!in_array($fileExt, ['xlsx', 'xls', 'csv'])) {
+                        $error = 'Formato de archivo no soportado. Usa Excel (.xlsx, .xls) o CSV.';
+                    } else {
+                        $companyColumn = trim($_POST['company_column'] ?? 'A');
+
+                        if (empty($companyColumn)) {
+                            $error = 'Especifica la columna de empresa.';
+                        } else {
+                            // Procesar el archivo
+                            $results = $this->processExcelFile($filePath, $companyColumn, $fileExt);
+                            
+                            if ($results === false) {
+                                $error = 'Error al procesar el archivo. Verifica que el formato sea correcto.';
+                            } else {
+                                $success = 'Archivo procesado correctamente. Se encontraron ' . count($results) . ' empresas.';
+                            }
+                        }
+                    }
+                } catch (Exception $e) {
+                    $error = 'Error al procesar el archivo: ' . $e->getMessage();
+                }
+            }
+        }
+
+        include __DIR__ . '/../views/dashboard/clasificacion_empresas.php';
+    }
+
+    private function processExcelFile($filePath, $companyColumn, $fileExt)
+    {
+        $results = [];
+
+        try {
+            if ($fileExt === 'csv') {
+                // Procesar CSV
+                $results = $this->processCsvFile($filePath, $companyColumn);
+            } else {
+                // Procesar Excel con PhpSpreadsheet
+                $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
+                $worksheet = $spreadsheet->getActiveSheet();
+
+                // Convertir columna (A, B, C, etc) a número (1, 2, 3, etc)
+                $columnIndex = $this->columnLetterToIndex($companyColumn);
+
+                if ($columnIndex === false) {
+                    // Podría ser un nombre de columna
+                    $columnIndex = $this->findColumnByName($worksheet, $companyColumn);
+                    if ($columnIndex === false) {
+                        return false;
+                    }
+                }
+
+                // Iterar sobre las filas
+                foreach ($worksheet->getRowIterator(2) as $row) { // Comenzar desde fila 2 (omitir header)
+                    $cell = $worksheet->getCellByColumnAndRow($columnIndex, $row->getRowIndex());
+                    $company = trim($cell->getValue() ?? '');
+
+                    if (!empty($company) && $company !== 'Empresa') {
+                        if (!isset($results[$company])) {
+                            $results[$company] = 0;
+                        }
+                        $results[$company]++;
+                    }
+                }
+            }
+
+            // Ordenar alfabéticamente
+            asort($results);
+            return $results;
+
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    private function processCsvFile($filePath, $companyColumn)
+    {
+        $results = [];
+        $handle = fopen($filePath, 'r');
+
+        if ($handle === false) {
+            return false;
+        }
+
+        $columnIndex = $this->columnLetterToIndex($companyColumn);
+        $rowIndex = 0;
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $rowIndex++;
+
+            if ($rowIndex === 1) {
+                // Saltar encabezado
+                continue;
+            }
+
+            if ($columnIndex === false || !isset($row[$columnIndex - 1])) {
+                continue;
+            }
+
+            $company = trim($row[$columnIndex - 1] ?? '');
+
+            if (!empty($company)) {
+                if (!isset($results[$company])) {
+                    $results[$company] = 0;
+                }
+                $results[$company]++;
+            }
+        }
+
+        fclose($handle);
+        return $results;
+    }
+
+    private function columnLetterToIndex($column)
+    {
+        // Convertir letras de columna (A, B, C, AA, etc) a índice numérico
+        $column = strtoupper(trim($column));
+
+        // Si es un número, devolverlo
+        if (is_numeric($column)) {
+            return intval($column);
+        }
+
+        // Convertir letra a número
+        $index = 0;
+        $len = strlen($column);
+
+        for ($i = 0; $i < $len; $i++) {
+            $index = $index * 26 + (ord($column[$i]) - ord('A') + 1);
+        }
+
+        return $index ?: false;
+    }
+
+    private function findColumnByName($worksheet, $columnName)
+    {
+        // Buscar una columna por su nombre en la primera fila
+        $columnName = strtolower(trim($columnName));
+
+        foreach ($worksheet->getRowIterator(1, 1) as $row) {
+            $cellIterator = $row->getCellIterator();
+            $colIndex = 1;
+
+            foreach ($cellIterator as $cell) {
+                if (strtolower(trim($cell->getValue() ?? '')) === $columnName) {
+                    return $colIndex;
+                }
+                $colIndex++;
+            }
+        }
+
+        return false;
+    }
+
     private function ensureAuth()
     {
         if (empty($_SESSION['user'])) {

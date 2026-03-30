@@ -48,6 +48,12 @@
                                 <span class="fw-semibold">Usuarios</span>
                             </a>
                         </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="index.php?c=dashboard&a=clasificacion_empresas" class="btn btn-outline-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4">
+                                <i class="bi bi-diagram-3 fs-1 mb-2"></i>
+                                <span class="fw-semibold">Clasificación por Empresas</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
