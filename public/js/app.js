@@ -1,5 +1,14 @@
 // Archivo de JavaScript base para funcionalidades futuras
 document.addEventListener('DOMContentLoaded', function () {
+    // Inicializar tooltips de Bootstrap
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Agregar animación de entrada a la página
+    document.body.classList.add('fade-in');
+
     const themeToggle = document.getElementById('theme-toggle');
     const savedTheme = localStorage.getItem('atlas-theme') || 'light';
 
@@ -35,5 +44,30 @@ document.addEventListener('DOMContentLoaded', function () {
             this.setAttribute('aria-label', isPassword ? 'Ocultar contraseña' : 'Mostrar contraseña');
         });
     }
+
+    // Funcionalidad de búsqueda mejorada
+    const searchInputs = document.querySelectorAll('input[name="search"]');
+    searchInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const tableRows = this.closest('.container-fluid').querySelectorAll('tbody tr');
+
+            tableRows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+    });
+
+    // Mejorar UX de botones de confirmación
+    const confirmButtons = document.querySelectorAll('a[onclick*="confirm"]');
+    confirmButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            const message = this.getAttribute('onclick').match(/confirm\('([^']+)'\)/);
+            if (message && !confirm(message[1])) {
+                e.preventDefault();
+            }
+        });
+    });
 });
 

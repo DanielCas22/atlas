@@ -29,7 +29,7 @@
                     <p style="margin: 0.3rem 0 0 0; font-size: 0.9rem; color: #7f8c8d;"><strong><?= intval($group['total']) ?></strong> pacientes</p>
                     <div style="display: flex; gap: 0.5rem; margin-top: 0.8rem;">
                         <a href="index.php?c=company&a=view&id=<?= $company['id'] ?>&order=<?= urlencode($group['order_number']) ?>" class="btn" style="flex: 1; text-align: center; font-size: 0.9rem; padding: 0.55rem 0.9rem; margin-right: 0;">Abrir</a>
-                        <a href="index.php?c=company&a=clearOrder&id=<?= $company['id'] ?>&order=<?= urlencode($group['order_number']) ?>" class="btn btn-danger" style="font-size: 0.85rem; padding: 0.55rem 0.8rem; margin-right: 0;" onclick="return confirm('¿Eliminar todos los <?= intval($group['total']) ?> pacientes de la orden <?= htmlspecialchars($group['order_number']) ?>?');">Depurar</a>
+                        <a href="index.php?c=company&a=clearOrder&id=<?= $company['id'] ?>&order=<?= urlencode($group['order_number']) ?>" class="btn btn-danger" style="background:#d98880;color:#000;text-decoration:underline;padding:2px 8px;border-radius:4px;font-size: 0.85rem; margin-right: 0;" onclick="return confirm('¿Eliminar todos los <?= intval($group['total']) ?> pacientes de la orden <?= htmlspecialchars($group['order_number']) ?>?');"><i class="bi bi-trash"></i> <u>Depurar</u></a>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -43,7 +43,7 @@
             <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
                 <a class="btn" href="index.php?c=company&a=view&id=<?= $company['id'] ?>" style="font-size: 0.9rem;">← Volver a órdenes</a>
                 <a class="btn btn-success" href="index.php?c=exam&a=exportCandidates&order=<?= urlencode($orderNumber) ?>" style="font-size: 0.9rem;">📥 Exportar XLSX</a>
-                <a class="btn btn-danger" href="index.php?c=company&a=clearOrder&id=<?= $company['id'] ?>&order=<?= urlencode($orderNumber) ?>" style="font-size: 0.9rem;" onclick="return confirm('¿Eliminar todos los <?= count($exams) ?> pacientes de la orden <?= htmlspecialchars($orderNumber) ?>?');">🗑 Depurar carpeta</a>
+                <a class="btn btn-danger" href="index.php?c=company&a=clearOrder&id=<?= $company['id'] ?>&order=<?= urlencode($orderNumber) ?>" style="background:#d98880;color:#000;text-decoration:underline;padding:2px 8px;border-radius:4px;font-size: 0.9rem;" onclick="return confirm('¿Eliminar todos los <?= count($exams) ?> pacientes de la orden <?= htmlspecialchars($orderNumber) ?>?');"><i class="bi bi-trash"></i> <u>Depurar carpeta</u></a>
             </div>
         </div>
 
@@ -88,8 +88,8 @@
                             ?></td>
                             <td><?= htmlspecialchars($exam['order_number'] ?? '') ?></td>
                             <td>
-                                <a class="btn btn-warning" href="index.php?c=exam&a=edit&id=<?= $exam['id'] ?>">Editar</a>
-                                <a class="btn btn-danger" href="index.php?c=exam&a=delete&id=<?= $exam['id'] ?>" onclick="return confirm('¿Eliminar paciente?');">Eliminar</a>
+                                <a class="btn btn-warning" style="background:#e0e0e0;color:#000;text-decoration:underline;padding:2px 8px;border-radius:4px;margin-right:2px;" href="index.php?c=exam&a=edit&id=<?= $exam['id'] ?>"><i class="bi bi-pencil"></i> <u>Editar</u></a>
+                                <a class="btn btn-danger" style="background:#d98880;color:#000;text-decoration:underline;padding:2px 8px;border-radius:4px;" href="index.php?c=exam&a=delete&id=<?= $exam['id'] ?>" onclick="return confirm('¿Eliminar paciente?');"><i class="bi bi-trash"></i> <u>Eliminar</u></a>
                             </td>
                         </tr>
                     <?php endforeach; ?>

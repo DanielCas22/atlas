@@ -30,8 +30,8 @@
                         <td><?= htmlspecialchars($userItem['email']) ?></td>
                         <td><?= htmlspecialchars($userItem['role_name']) ?></td>
                         <td>
-                            <a class="btn" href="index.php?c=dashboard&a=editUser&id=<?= $userItem['id'] ?>">Editar</a>
-                            <a class="btn" href="index.php?c=dashboard&a=deleteUser&id=<?= $userItem['id'] ?>" onclick="return confirm('¿Eliminar usuario?');">Eliminar</a>
+                            <a class="btn" style="background:#e0e0e0;color:#000;text-decoration:underline;padding:2px 8px;border-radius:4px;margin-right:2px;" href="index.php?c=dashboard&a=editUser&id=<?= $userItem['id'] ?>"><i class="bi bi-pencil"></i> <u>Editar</u></a>
+                            <a class="btn" style="background:#d98880;color:#000;text-decoration:underline;padding:2px 8px;border-radius:4px;" href="index.php?c=dashboard&a=deleteUser&id=<?= $userItem['id'] ?>" onclick="return confirm('¿Eliminar usuario?');"><i class="bi bi-trash"></i> <u>Eliminar</u></a>
                         </td>
                     </tr>
                 <?php endforeach; ?>

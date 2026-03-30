@@ -32,8 +32,8 @@ body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
 body h1 { font-size: 2.2rem; font-weight: 600; margin: 0.5rem 0 1rem 0; letter-spacing: -0.5px; color: var(--text-high); }
 body h2 { font-size: 1.6rem; font-weight: 600; margin: 1.5rem 0 1rem 0; color: var(--text-high); }
 body p { line-height: 1.6; color: var(--text); }
-body p, body h1, body h2, body h3, body h4, body h5, body h6, body label, body a { color: #000000; }
-body small, body .muted, .footer { color: #000000; }
+body p, body h1, body h2, body h3, body h4, body h5, body h6, body label, body a { color: var(--text); }
+body small, body .muted, .footer { color: var(--text-muted); }
 
 body.dark-theme {
   --bg-start: #1C2734;
@@ -48,7 +48,47 @@ body.dark-theme {
   --card-bg: linear-gradient(180deg, #223349, #1F2C3E);
   --card-border: #3D5777;
   --table-head-bg: #264367;
-  --table-head-color: #E8F3FF;
+  --table-head-color: #000000;
+}
+
+body.dark-theme p,
+body.dark-theme h1,
+body.dark-theme h2,
+body.dark-theme h3,
+body.dark-theme h4,
+body.dark-theme h5,
+body.dark-theme h6,
+body.dark-theme label,
+body.dark-theme span,
+body.dark-theme div,
+body.dark-theme td,
+body.dark-theme th,
+body.dark-theme strong,
+body.dark-theme em,
+body.dark-theme small,
+body.dark-theme .muted,
+body.dark-theme .footer,
+body.dark-theme a:not(.btn) {
+  color: #000000 !important;
+}
+
+/* Nombres de empresas en blanco para contraste en fondo oscuro */
+.company-name {
+  color: #fff !important;
+  font-weight: bold;
+  letter-spacing: 0.2px;
+}
+
+body.dark-theme .company-name {
+  color: #fff !important;
+}
+
+/* Ajuste tabla para fondo oscuro y contraste */
+.table th, .table td {
+  color: #fff;
+}
+body.dark-theme .table th, body.dark-theme .table td {
+  color: #fff !important;
 }
 
 .container, .login-card, .modules-card, .table, .topbar { transition: background .4s ease, color .4s ease, box-shadow .4s ease; }
@@ -114,11 +154,11 @@ body.dark-theme .table {
 }
 body.dark-theme .table th {
     background: linear-gradient(135deg, #3d5777, #2d3f5a) !important;
-    color: #e8f3ff !important;
+    color: #000000 !important;
 }
 body.dark-theme .table th,
 body.dark-theme .table td {
-    color: #000;
+    color: #000000 !important;
     border-color: #826b5e;
 }
 body.dark-theme .table tbody tr:nth-child(odd) {
@@ -129,6 +169,207 @@ body.dark-theme .table tbody tr:nth-child(even) {
 }
 body.dark-theme .table tbody tr:hover {
     background: rgba(74, 144, 226, 0.12);
+}
+
+/* Estilos adicionales para diseño profesional y minimalista */
+body {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+}
+
+/* Navbar improvements */
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.navbar-nav .nav-link {
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+}
+
+/* Card improvements */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    background: linear-gradient(135deg, rgba(248, 249, 250, 0.8), rgba(241, 243, 244, 0.8));
+}
+
+/* Button improvements */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 0.5rem 1.2rem;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-group .btn {
+    border-radius: 6px !important;
+    margin-right: 2px;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0;
+}
+
+/* Table improvements */
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 1rem;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.table td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* Badge improvements */
+.badge {
+    font-weight: 500;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+}
+
+/* Form improvements */
+.form-control {
+    border-radius: 8px;
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+/* Avatar circles */
+.bg-primary.text-white.rounded-circle {
+    background: linear-gradient(135deg, #0d6efd, #0056b3) !important;
+}
+
+/* Tooltip initialization */
+[data-bs-toggle="tooltip"] {
+    cursor: help;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .btn-group {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .btn-group .btn {
+        margin-right: 0 !important;
+        border-radius: 6px !important;
+    }
+
+    .d-flex.justify-content-between.align-items-center {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+}
+
+/* Animation for page transitions */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Regla general para asegurar que TODO el texto sea negro en tema oscuro */
+body.dark-theme,
+body.dark-theme p,
+body.dark-theme h1,
+body.dark-theme h2,
+body.dark-theme h3,
+body.dark-theme h4,
+body.dark-theme h5,
+body.dark-theme h6,
+body.dark-theme span,
+body.dark-theme div,
+body.dark-theme td,
+body.dark-theme th,
+body.dark-theme label,
+body.dark-theme a:not(.btn),
+body.dark-theme strong,
+body.dark-theme em,
+body.dark-theme small,
+body.dark-theme .muted,
+body.dark-theme .footer {
+    color: #000000 !important;
 }
 .alert { padding: .6rem .8rem; margin-bottom: 1rem; border-radius: 5px; }
 .alert-error { background: #feecec; border: 1px solid #e99b9b; color: #7a0202; }

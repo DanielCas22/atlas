@@ -1,56 +1,149 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 
-<h1>Listado de Exámenes</h1>
-<div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
-    <a class="btn" href="index.php?c=dashboard&a=index"><i class="bi bi-arrow-left"></i> Volver al Dashboard</a>
-    <a class="btn btn-success" href="index.php?c=exam&a=add" style="margin-right: 0;"><i class="bi bi-upload"></i> Importar Pacientes</a>
-</div>
+<div class="container-fluid py-4">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 fw-bold text-primary mb-1">
+                        <i class="bi bi-clipboard-data me-2"></i>Listado de Exámenes
+                    </h1>
+                    <p class="text-muted mb-0">Gestiona y administra los exámenes médicos realizados</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="index.php?c=exam&a=add" class="btn btn-success">
+                        <i class="bi bi-plus-circle me-2"></i>Importar Pacientes
+                    </a>
+                    <a href="index.php?c=dashboard&a=index" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-2"></i>Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<div style="overflow-x: auto; border-radius: 8px;">
-<table class="table">
-    <thead>
-        <tr>
-            <th>N°</th>
-            <th>IDENTIFICACION</th>
-            <th>NOMBRE</th>
-            <th>TELEFONO</th>
-            <th>FECHA DE NACIMIENTO</th>
-            <th>GENERO</th>
-            <th>FECHA DE EXAMEN</th>
-            <th>RESULTADO</th>
-            <th>ORDEN</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php foreach ((new ExamModel())->allWithDetails() as $exam): ?>
-            <tr>
-                <td><?= $exam['id'] ?></td>
-                <td><?= htmlspecialchars($exam['document_number'] ?? '') ?></td>
-                <td><?= htmlspecialchars($exam['candidate_name']) ?></td>
-                <td><?= htmlspecialchars($exam['phone'] ?? '') ?></td>
-                <td><?= htmlspecialchars($exam['birth_date'] ?? '') ?></td>
-                <td><?= htmlspecialchars($exam['gender'] ?? '') ?></td>
-                <td><?= htmlspecialchars($exam['exam_date'] ?? '') ?></td>
-                <td><?php
-                    $statusMap = [
-                        'FINALIZADO' => 'Apto',
-                        'RECHAZADO' => 'No Apto',
-                        'EN_CURSO' => 'Aplazado',
-                        'PENDIENTE' => 'Pendiente'
-                    ];
-                    echo htmlspecialchars($statusMap[$exam['status']] ?? $exam['status']);
-                ?></td>
-                <td><?= htmlspecialchars($exam['order_number'] ?? '') ?></td>
-                <td>
-                    <a class="btn-small" style="background:#e0e0e0;color:#000;text-decoration:underline;padding:2px 8px;border-radius:4px;margin-right:2px;" href="index.php?c=exam&a=view&id=<?= $exam['id'] ?>"><i class="bi bi-eye"></i> <u>Ver</u></a>
-                    <a class="btn-small" style="background:#e0e0e0;color:#000;text-decoration:underline;padding:2px 8px;border-radius:4px;margin-right:2px;" href="index.php?c=exam&a=edit&id=<?= $exam['id'] ?>"><i class="bi bi-pencil"></i> <u>Editar</u></a>
-                    <a class="btn-small btn-danger" style="background:#d98880;color:#000;text-decoration:underline;padding:2px 8px;border-radius:4px;" href="index.php?c=exam&a=delete&id=<?= $exam['id'] ?>" onclick="return confirm('¿Eliminar paciente?');"><i class="bi bi-trash"></i> <u>Eliminar</u></a>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-    </tbody>
-</table>
+    <!-- Table Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-light border-0 py-3">
+                    <h5 class="mb-0 fw-semibold">
+                        <i class="bi bi-list-ul me-2"></i>
+                        Exámenes Registrados
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="border-0 fw-semibold">#</th>
+                                    <th class="border-0 fw-semibold">
+                                        <i class="bi bi-person-vcard me-1"></i>Identificación
+                                    </th>
+                                    <th class="border-0 fw-semibold">
+                                        <i class="bi bi-person me-1"></i>Nombre
+                                    </th>
+                                    <th class="border-0 fw-semibold">
+                                        <i class="bi bi-telephone me-1"></i>Teléfono
+                                    </th>
+                                    <th class="border-0 fw-semibold">
+                                        <i class="bi bi-calendar-event me-1"></i>Nacimiento
+                                    </th>
+                                    <th class="border-0 fw-semibold">
+                                        <i class="bi bi-gender-ambiguous me-1"></i>Género
+                                    </th>
+                                    <th class="border-0 fw-semibold">
+                                        <i class="bi bi-calendar-check me-1"></i>Examen
+                                    </th>
+                                    <th class="border-0 fw-semibold">
+                                        <i class="bi bi-check-circle me-1"></i>Resultado
+                                    </th>
+                                    <th class="border-0 fw-semibold">
+                                        <i class="bi bi-hash me-1"></i>Orden
+                                    </th>
+                                    <th class="border-0 fw-semibold text-center" style="width: 180px;">
+                                        <i class="bi bi-gear me-1"></i>Acciones
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ((new ExamModel())->allWithDetails() as $exam): ?>
+                                    <tr>
+                                        <td class="fw-semibold text-muted">#<?= $exam['id'] ?></td>
+                                        <td>
+                                            <span class="badge bg-light text-dark">
+                                                <?= htmlspecialchars($exam['document_number'] ?? 'N/A') ?>
+                                            </span>
+                                        </td>
+                                        <td class="fw-semibold">
+                                            <?= htmlspecialchars($exam['candidate_name']) ?>
+                                        </td>
+                                        <td>
+                                            <i class="bi bi-telephone text-muted me-1"></i>
+                                            <?= htmlspecialchars($exam['phone'] ?? 'N/A') ?>
+                                        </td>
+                                        <td>
+                                            <i class="bi bi-calendar-event text-muted me-1"></i>
+                                            <?= htmlspecialchars($exam['birth_date'] ?? 'N/A') ?>
+                                        </td>
+                                        <td>
+                                            <?php
+                                            $genderIcon = ($exam['gender'] === 'M') ? 'bi-gender-male text-primary' : 'bi-gender-female text-danger';
+                                            ?>
+                                            <i class="bi <?= $genderIcon ?> me-1"></i>
+                                            <?= htmlspecialchars($exam['gender'] ?? 'N/A') ?>
+                                        </td>
+                                        <td>
+                                            <i class="bi bi-calendar-check text-muted me-1"></i>
+                                            <?= htmlspecialchars($exam['exam_date'] ?? 'N/A') ?>
+                                        </td>
+                                        <td>
+                                            <?php
+                                            $statusMap = [
+                                                'FINALIZADO' => ['Apto', 'success'],
+                                                'RECHAZADO' => ['No Apto', 'danger'],
+                                                'EN_CURSO' => ['Aplazado', 'warning'],
+                                                'PENDIENTE' => ['Pendiente', 'secondary']
+                                            ];
+                                            $statusInfo = $statusMap[$exam['status']] ?? [$exam['status'], 'secondary'];
+                                            ?>
+                                            <span class="badge bg-<?= $statusInfo[1] ?>">
+                                                <?= htmlspecialchars($statusInfo[0]) ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">
+                                                <?= htmlspecialchars($exam['order_number'] ?? 'N/A') ?>
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group" role="group">
+                                                <a class="btn btn-sm btn-outline-primary" href="index.php?c=exam&a=view&id=<?= $exam['id'] ?>"
+                                                   data-bs-toggle="tooltip" title="Ver detalles">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a class="btn btn-sm btn-outline-warning" href="index.php?c=exam&a=edit&id=<?= $exam['id'] ?>"
+                                                   data-bs-toggle="tooltip" title="Editar examen">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a class="btn btn-sm btn-outline-danger" href="index.php?c=exam&a=delete&id=<?= $exam['id'] ?>"
+                                                   onclick="return confirm('¿Eliminar paciente?');"
+                                                   data-bs-toggle="tooltip" title="Eliminar examen">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <?php include __DIR__ . '/../layouts/footer.php'; ?>
