@@ -183,18 +183,29 @@ class DashboardController
                     if (!in_array($fileExt, ['xlsx', 'xls', 'csv'])) {
                         $error = 'Formato de archivo no soportado. Usa Excel (.xlsx, .xls) o CSV.';
                     } else {
-                        $companyColumn = trim($_POST['company_column'] ?? 'A');
+                        $columns = [
+                            'company' => trim($_POST['company_column'] ?? 'A'),
+                            'name' => trim($_POST['name_column'] ?? 'B'),
+                            'document' => trim($_POST['document_column'] ?? ''),
+                            'phone' => trim($_POST['phone_column'] ?? ''),
+                            'gender' => trim($_POST['gender_column'] ?? ''),
+                            'birth' => trim($_POST['birth_column'] ?? ''),
+                            'exam' => trim($_POST['exam_column'] ?? ''),
+                        ];
 
-                        if (empty($companyColumn)) {
+                        if (empty($columns['company'])) {
                             $error = 'Especifica la columna de empresa.';
                         } else {
                             // Procesar el archivo
-                            $results = $this->processExcelFile($filePath, $companyColumn, $fileExt);
-                            
-                            if ($results === false) {
-                                $error = 'Error al procesar el archivo. Verifica que el formato sea correcto.';
-                            } else {
-                                $success = 'Archivo procesado correctamente. Se encontraron ' . count($results) . ' empresas.';
+                            try {
+                                $results = $this->processExcelFile($filePath, $columns, $fileExt);
+                                if (is_array($results) && !empty($results)) {
+                                    $success = 'Archivo procesado correctamente. Se encontraron ' . count($results) . ' empresas. Los pacientes han sido clasificados y guardados en carpetas.';
+                                } else {
+                                    $error = 'El archivo no contiene datos válidos.';
+                                }
+                            } catch (Exception $e) {
+                                $error = $e->getMessage();
                             }
                         }
                     }
@@ -207,89 +218,221 @@ class DashboardController
         include __DIR__ . '/../views/dashboard/clasificacion_empresas.php';
     }
 
-    private function processExcelFile($filePath, $companyColumn, $fileExt)
+    private function processExcelFile($filePath, $columns, $fileExt)
     {
         $results = [];
+        $companiesData = []; // Almacenar datos de pacientes por empresa
 
         try {
             if ($fileExt === 'csv') {
-                // Procesar CSV
-                $results = $this->processCsvFile($filePath, $companyColumn);
+                $companiesData = $this->processCsvFileExtended($filePath, $columns);
             } else {
                 // Procesar Excel con PhpSpreadsheet
-                $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
+                try {
+                    $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($filePath);
+                } catch (\PhpOffice\PhpSpreadsheet\Reader\Exception $e) {
+                    throw new Exception('No se pudo leer el archivo. Asegúrate de que sea un archivo Excel válido (.xlsx, .xls)');
+                }
+                
                 $worksheet = $spreadsheet->getActiveSheet();
 
-                // Convertir columna (A, B, C, etc) a número (1, 2, 3, etc)
-                $columnIndex = $this->columnLetterToIndex($companyColumn);
-
-                if ($columnIndex === false) {
-                    // Podría ser un nombre de columna
-                    $columnIndex = $this->findColumnByName($worksheet, $companyColumn);
-                    if ($columnIndex === false) {
-                        return false;
+                // Obtener índices de columnas
+                $colIndices = $this->getColumnIndices($worksheet, $columns);
+                
+                $highestRow = $worksheet->getHighestRow();
+                for ($rowNum = 2; $rowNum <= $highestRow; $rowNum++) {
+                    $company = $this->getCellValue($worksheet, $colIndices['company'], $rowNum);
+                    
+                    if (empty($company)) continue;
+                    
+                    if (!isset($results[$company])) {
+                        $results[$company] = 0;
+                        $companiesData[$company] = [];
                     }
-                }
-
-                // Iterar sobre las filas
-                foreach ($worksheet->getRowIterator(2) as $row) { // Comenzar desde fila 2 (omitir header)
-                    $cell = $worksheet->getCellByColumnAndRow($columnIndex, $row->getRowIndex());
-                    $company = trim($cell->getValue() ?? '');
-
-                    if (!empty($company) && $company !== 'Empresa') {
-                        if (!isset($results[$company])) {
-                            $results[$company] = 0;
-                        }
-                        $results[$company]++;
-                    }
+                    
+                    $results[$company]++;
+                    
+                    // Extraer datos del paciente
+                    $patientData = [
+                        'name' => $this->getCellValue($worksheet, $colIndices['name'], $rowNum),
+                        'document' => $this->getCellValue($worksheet, $colIndices['document'], $rowNum),
+                        'phone' => $this->getCellValue($worksheet, $colIndices['phone'], $rowNum),
+                        'gender' => $this->getCellValue($worksheet, $colIndices['gender'], $rowNum),
+                        'birth' => $this->getCellValue($worksheet, $colIndices['birth'], $rowNum),
+                        'exam' => $this->getCellValue($worksheet, $colIndices['exam'], $rowNum),
+                    ];
+                    
+                    $companiesData[$company][] = $patientData;
                 }
             }
 
-            // Ordenar alfabéticamente
+            // Crear carpetas y archivos Excel
+            if (!empty($results)) {
+                $this->createCompanyFolders($companiesData);
+            }
+
             asort($results);
             return $results;
 
         } catch (Exception $e) {
-            return false;
+            throw $e;
         }
     }
 
-    private function processCsvFile($filePath, $companyColumn)
+    private function getColumnIndices($worksheet, $columns)
     {
-        $results = [];
+        $indices = [];
+        
+        foreach ($columns as $key => $colRef) {
+            if (empty($colRef)) {
+                $indices[$key] = null;
+                continue;
+            }
+            
+            $colIndex = $this->columnLetterToIndex($colRef);
+            
+            if ($colIndex === false) {
+                // Podría ser un nombre de columna
+                $colIndex = $this->findColumnByName($worksheet, $colRef);
+            }
+            
+            $indices[$key] = $colIndex;
+        }
+        
+        return $indices;
+    }
+
+    private function getCellValue($worksheet, $colIndex, $rowNum)
+    {
+        if ($colIndex === false || $colIndex === null) {
+            return '';
+        }
+        
+        $columnLetter = $this->indexToColumnLetter($colIndex);
+        $cellAddress = $columnLetter . $rowNum;
+        return trim($worksheet->getCell($cellAddress)->getValue() ?? '');
+    }
+
+    private function createCompanyFolders($companiesData)
+    {
+        $baseDir = __DIR__ . '/../empresas_clasificadas';
+        
+        // Crear directorio base si no existe
+        if (!is_dir($baseDir)) {
+            mkdir($baseDir, 0755, true);
+        }
+        
+        // Crear carpeta para cada empresa
+        foreach ($companiesData as $company => $patients) {
+            $companyDir = $baseDir . '/' . $this->sanitizeFileName($company);
+            $patientsDir = $companyDir . '/PACIENTES_POR_ORDENAR';
+            
+            // Crear directorios
+            if (!is_dir($patientsDir)) {
+                mkdir($patientsDir, 0755, true);
+            }
+            
+            // Generar archivo Excel con los pacientes
+            $this->generatePatientExcelFile($patients, $patientsDir . '/pacientes.xlsx');
+        }
+    }
+
+    private function generatePatientExcelFile($patients, $filePath)
+    {
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Pacientes');
+        
+        // Encabezados
+        $headers = ['Nombre', 'Documento', 'Teléfono', 'Género', 'Fecha Nacimiento', 'Tipo Examen'];
+        $sheet->fromArray([$headers], null, 'A1');
+        
+        // Datos de pacientes
+        if (!empty($patients)) {
+            $rowNum = 2;
+            foreach ($patients as $patient) {
+                $sheet->setCellValue('A' . $rowNum, $patient['name']);
+                $sheet->setCellValue('B' . $rowNum, $patient['document']);
+                $sheet->setCellValue('C' . $rowNum, $patient['phone']);
+                $sheet->setCellValue('D' . $rowNum, $patient['gender']);
+                $sheet->setCellValue('E' . $rowNum, $patient['birth']);
+                $sheet->setCellValue('F' . $rowNum, $patient['exam']);
+                $rowNum++;
+            }
+        }
+        
+        // Ajustar ancho de columnas
+        foreach (range('A', 'F') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+        
+        // Guardar archivo
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save($filePath);
+    }
+
+    private function sanitizeFileName($fileName)
+    {
+        // Eliminar caracteres especiales del nombre de archivo
+        $fileName = preg_replace('/[^a-zA-Z0-9_\-]/u', '_', $fileName);
+        return trim($fileName, '_');
+    }
+
+    private function processCsvFileExtended($filePath, $columns)
+    {
+        $companiesData = [];
         $handle = fopen($filePath, 'r');
 
         if ($handle === false) {
-            return false;
+            throw new Exception('No se pudo abrir el archivo CSV');
         }
 
-        $columnIndex = $this->columnLetterToIndex($companyColumn);
+        // Obtener índices de columnas
+        $colIndices = [];
         $rowIndex = 0;
 
         while (($row = fgetcsv($handle)) !== false) {
             $rowIndex++;
 
             if ($rowIndex === 1) {
-                // Saltar encabezado
-                continue;
-            }
-
-            if ($columnIndex === false || !isset($row[$columnIndex - 1])) {
-                continue;
-            }
-
-            $company = trim($row[$columnIndex - 1] ?? '');
-
-            if (!empty($company)) {
-                if (!isset($results[$company])) {
-                    $results[$company] = 0;
+                // Procesar encabezados
+                foreach ($columns as $key => $colRef) {
+                    if (is_numeric($colRef)) {
+                        $colIndices[$key] = intval($colRef) - 1;
+                    } else {
+                        // Buscar por nombre
+                        $colIndices[$key] = array_search(strtolower(trim($colRef)), array_map('strtolower', $row));
+                        if ($colIndices[$key] === false) {
+                            $colIndices[$key] = null;
+                        }
+                    }
                 }
-                $results[$company]++;
+                continue;
             }
+
+            $company = $row[$colIndices['company'] ?? 0] ?? '';
+            $company = trim($company);
+            
+            if (empty($company)) continue;
+            
+            if (!isset($companiesData[$company])) {
+                $companiesData[$company] = [];
+            }
+            
+            $patientData = [
+                'name' => $row[$colIndices['name'] ?? 1] ?? '',
+                'document' => $row[$colIndices['document'] ?? 2] ?? '',
+                'phone' => $row[$colIndices['phone'] ?? 3] ?? '',
+                'gender' => $row[$colIndices['gender'] ?? 4] ?? '',
+                'birth' => $row[$colIndices['birth'] ?? 5] ?? '',
+                'exam' => $row[$colIndices['exam'] ?? 6] ?? '',
+            ];
+            
+            $companiesData[$company][] = $patientData;
         }
 
         fclose($handle);
-        return $results;
+        return $companiesData;
     }
 
     private function columnLetterToIndex($column)
@@ -317,20 +460,32 @@ class DashboardController
     {
         // Buscar una columna por su nombre en la primera fila
         $columnName = strtolower(trim($columnName));
-
-        foreach ($worksheet->getRowIterator(1, 1) as $row) {
-            $cellIterator = $row->getCellIterator();
-            $colIndex = 1;
-
-            foreach ($cellIterator as $cell) {
-                if (strtolower(trim($cell->getValue() ?? '')) === $columnName) {
-                    return $colIndex;
-                }
-                $colIndex++;
+        
+        $highestColumn = $worksheet->getHighestColumn();
+        $highestColumnIndex = $this->columnLetterToIndex($highestColumn);
+        
+        for ($colIndex = 1; $colIndex <= $highestColumnIndex; $colIndex++) {
+            $columnLetter = $this->indexToColumnLetter($colIndex);
+            $cellValue = $worksheet->getCell($columnLetter . '1')->getValue();
+            
+            if (strtolower(trim($cellValue ?? '')) === $columnName) {
+                return $colIndex;
             }
         }
 
         return false;
+    }
+
+    private function indexToColumnLetter($index)
+    {
+        // Convertir índice numérico a letra de columna (1->A, 2->B, 27->AA, etc)
+        $letter = '';
+        while ($index > 0) {
+            $index--;
+            $letter = chr(65 + ($index % 26)) . $letter;
+            $index = intval($index / 26);
+        }
+        return $letter;
     }
 
     private function ensureAuth()

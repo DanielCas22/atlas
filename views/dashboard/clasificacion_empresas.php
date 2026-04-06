@@ -46,17 +46,60 @@
                             </label>
                             <input type="file" class="form-control form-control-lg" id="excelFile" name="excel_file" accept=".xlsx,.xls,.csv" required>
                             <small class="text-muted d-block mt-2">
-                                Formatos soportados: Excel (.xlsx, .xls) o CSV. 
-                                <br>El archivo debe contener columnas: Empresa, Nombre, Apellido (u otro identificador)
+                                Formatos soportados: Excel (.xlsx, .xls) o CSV
                             </small>
                         </div>
 
+                        <hr class="my-4">
+                        <h6 class="fw-semibold mb-3">Especifica las columnas del archivo:</h6>
+
                         <div class="mb-4">
                             <label for="companyColumn" class="form-label fw-semibold">
-                                <i class="bi bi-building me-2"></i>Columna de Empresa
+                                <i class="bi bi-building me-2"></i>Columna de Empresa *
                             </label>
                             <input type="text" class="form-control" id="companyColumn" name="company_column" placeholder="Ej: A, Empresa, Company" value="A" required>
-                            <small class="text-muted">Número o nombre de la columna que contiene el nombre de la empresa</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="nameColumn" class="form-label fw-semibold">
+                                <i class="bi bi-person me-2"></i>Columna de Nombre *
+                            </label>
+                            <input type="text" class="form-control" id="nameColumn" name="name_column" placeholder="Ej: B, Nombre" value="B">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="documentColumn" class="form-label fw-semibold">
+                                <i class="bi bi-card-text me-2"></i>Columna de Documento
+                            </label>
+                            <input type="text" class="form-control" id="documentColumn" name="document_column" placeholder="Ej: C, Cedula">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="phoneColumn" class="form-label fw-semibold">
+                                <i class="bi bi-telephone me-2"></i>Columna de Teléfono
+                            </label>
+                            <input type="text" class="form-control" id="phoneColumn" name="phone_column" placeholder="Ej: D, Telefono">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="genderColumn" class="form-label fw-semibold">
+                                <i class="bi bi-person-check me-2"></i>Columna de Género
+                            </label>
+                            <input type="text" class="form-control" id="genderColumn" name="gender_column" placeholder="Ej: E, Genero">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="birthColumn" class="form-label fw-semibold">
+                                <i class="bi bi-calendar-event me-2"></i>Columna de Fecha Nacimiento
+                            </label>
+                            <input type="text" class="form-control" id="birthColumn" name="birth_column" placeholder="Ej: F, Fecha_Nacimiento">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="examColumn" class="form-label fw-semibold">
+                                <i class="bi bi-clipbboard-check me-2"></i>Columna de Tipo Examen
+                            </label>
+                            <input type="text" class="form-control" id="examColumn" name="exam_column" placeholder="Ej: G, Tipo_Examen">
                         </div>
 
                         <div class="d-flex gap-2">
