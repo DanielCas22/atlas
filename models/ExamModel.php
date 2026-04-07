@@ -107,6 +107,16 @@ class ExamModel extends BaseModel
         return $stmt->execute([$company_id, $order_number]);
     }
 
+    public function deleteByCompanyId($company_id)
+    {
+        if (empty($company_id)) {
+            return false;
+        }
+
+        $stmt = $this->db->prepare('DELETE FROM exams WHERE company_id = ?');
+        return $stmt->execute([$company_id]);
+    }
+
     public function getCompanies()
     {
         $stmt = $this->db->query('SELECT id, name FROM security_companies ORDER BY name');

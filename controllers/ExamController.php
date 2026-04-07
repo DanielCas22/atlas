@@ -30,7 +30,8 @@ class ExamController
         $this->examModel->syncExamTypes($desiredExamTypes);
 
         // Obtener empresas directamente de la base de datos en lugar de sincronizar lista predefinida
-        $companies = $this->examModel->getCompanies();
+        $companyModel = new CompanyModel();
+        $companies = $companyModel->all();
         $examTypes = $this->examModel->getExamTypes();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -39,24 +40,60 @@ class ExamController
             $order_number = trim($_POST['order_number'] ?? '');
 
             $company_id = intval($companyInput);
-            if (!$company_id) {
-                $company = $this->examModel->findCompanyByName($companyInput);
-                $company_id = $company['id'] ?? 0;
+            if (!$company_id && $companyInput !== '') {
+                $company_id = $companyModel->addIfNotExists($companyInput);
             }
 
             $candidateText = trim($_POST['candidate_text'] ?? '');
-            $candidates = $this->extractCandidates($candidateText);
+            $candidates = [];
 
-            if ($company_id && $exam_type_id && !empty($candidates) && !empty($order_number)) {
-                foreach ($candidates as $candidate) {
-                    $status = $candidate['status'] ?? 'PENDIENTE';
-                    $this->examModel->add($company_id, $exam_type_id, $candidate['name'], $candidate['document_number'], $candidate['phone'], $candidate['gender'], $candidate['birth_date'], $candidate['exam_date'], $order_number, $status);
+            if (isset($_FILES['exam_file']) && !empty($_FILES['exam_file']['name'])) {
+                if ($_FILES['exam_file']['error'] === UPLOAD_ERR_OK) {
+                    $parsed = $this->parseExamFile($_FILES['exam_file']['tmp_name'], $_FILES['exam_file']['name']);
+                    if (isset($parsed['error'])) {
+                        $error = $parsed['error'];
+                    } else {
+                        $candidates = $parsed['candidates'];
+                    }
+                } else {
+                    $error = 'Error al subir el archivo. Verifica que se haya cargado correctamente.';
                 }
+            }
+
+            if (empty($candidates) && $candidateText !== '') {
+                $candidates = $this->extractCandidates($candidateText);
+            }
+
+            if (empty($error) && $company_id && $exam_type_id && !empty($candidates) && !empty($order_number)) {
+                foreach ($candidates as $candidate) {
+                    if (empty($candidate['order_number'])) {
+                        $candidate['order_number'] = $order_number;
+                    }
+                    $status = $candidate['status'] ?? 'PENDIENTE';
+                    $this->examModel->add(
+                        $company_id,
+                        $exam_type_id,
+                        $candidate['name'],
+                        $candidate['document_number'],
+                        $candidate['phone'],
+                        $candidate['gender'],
+                        $candidate['birth_date'],
+                        $candidate['exam_date'],
+                        $candidate['order_number'],
+                        $status
+                    );
+                }
+
                 header('Location: index.php?c=dashboard&a=index');
                 exit;
             }
 
-            $error = 'Complete todos los campos';
+            if (empty($error) && empty($candidates)) {
+                $error = 'Debes ingresar candidatos como texto o subir un archivo Excel/CSV.';
+            }
+            if (empty($error) && (empty($company_id) || empty($exam_type_id) || empty($order_number))) {
+                $error = 'Complete todos los campos obligatorios.';
+            }
         }
 
         include __DIR__ . '/../views/exams/add.php';
@@ -368,6 +405,174 @@ class ExamController
         }
         
         return null;
+    }
+
+    private function parseExamFile(string $tmpFile, string $originalName)
+    {
+        if (!class_exists('\PhpOffice\PhpSpreadsheet\IOFactory')) {
+            require_once __DIR__ . '/../vendor/autoload.php';
+        }
+
+        $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+        try {
+            if ($extension === 'csv') {
+                $reader = new \PhpOffice\PhpSpreadsheet\Reader\Csv();
+                $reader->setInputEncoding('UTF-8');
+                $reader->setDelimiter(',');
+                $reader->setEnclosure('"');
+                $spreadsheet = $reader->load($tmpFile);
+            } else {
+                $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($tmpFile);
+                $spreadsheet = $reader->load($tmpFile);
+            }
+        } catch (\Exception $e) {
+            return ['error' => 'No se pudo leer el archivo. Usa un archivo Excel (.xlsx, .xls) o CSV válido.'];
+        }
+
+        $worksheet = $spreadsheet->getActiveSheet();
+        $highestRow = $worksheet->getHighestRow();
+        $highestColumn = $worksheet->getHighestColumn();
+        $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
+
+        if ($highestRow < 2) {
+            return ['candidates' => []];
+        }
+
+        $headers = [];
+        for ($col = 1; $col <= $highestColumnIndex; $col++) {
+            $cellValue = trim((string) $worksheet->getCellByColumnAndRow($col, 1)->getValue());
+            $headers[$col] = strtolower(preg_replace('/[^a-z0-9]+/i', '_', $cellValue));
+        }
+
+        $mapping = [
+            'name' => ['nombre', 'candidate', 'candidato', 'full_name', 'nombre_completo'],
+            'document_number' => ['documento', 'cedula', 'id', 'identificacion'],
+            'phone' => ['telefono', 'teléfono', 'phone', 'celular', 'mobile'],
+            'gender' => ['genero', 'género', 'sexo', 'gender', 'sex'],
+            'birth_date' => ['fecha_nacimiento', 'nacimiento', 'birth_date', 'birthdate'],
+            'exam_date' => ['fecha_examen', 'fecha_de_examen', 'exam_date', 'fecha', 'date'],
+            'status' => ['estado', 'status', 'resultado', 'result'],
+            'order_number' => ['orden', 'numero_orden', 'order_number', 'order']
+        ];
+
+        $colMap = [];
+        foreach ($headers as $col => $header) {
+            foreach ($mapping as $key => $labels) {
+                foreach ($labels as $label) {
+                    if ($header === $label || strpos($header, $label) !== false) {
+                        if (!isset($colMap[$key])) {
+                            $colMap[$key] = $col;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (empty($colMap['name']) && $highestColumnIndex >= 1) {
+            $colMap['name'] = 1;
+        }
+        if (empty($colMap['document_number']) && $highestColumnIndex >= 2) {
+            $colMap['document_number'] = 2;
+        }
+        if (empty($colMap['phone']) && $highestColumnIndex >= 3) {
+            $colMap['phone'] = 3;
+        }
+        if (empty($colMap['gender']) && $highestColumnIndex >= 4) {
+            $colMap['gender'] = 4;
+        }
+        if (empty($colMap['birth_date']) && $highestColumnIndex >= 5) {
+            $colMap['birth_date'] = 5;
+        }
+        if (empty($colMap['exam_date']) && $highestColumnIndex >= 6) {
+            $colMap['exam_date'] = 6;
+        }
+        if (empty($colMap['status']) && $highestColumnIndex >= 7) {
+            $colMap['status'] = 7;
+        }
+        if (empty($colMap['order_number']) && $highestColumnIndex >= 8) {
+            $colMap['order_number'] = 8;
+        }
+
+        $candidates = [];
+        for ($row = 2; $row <= $highestRow; $row++) {
+            $candidate = [
+                'name' => '',
+                'document_number' => '',
+                'phone' => '',
+                'gender' => '',
+                'birth_date' => '',
+                'exam_date' => '',
+                'status' => 'PENDIENTE',
+                'order_number' => ''
+            ];
+
+            foreach ($candidate as $key => $value) {
+                if (!empty($colMap[$key])) {
+                    $cell = $worksheet->getCellByColumnAndRow($colMap[$key], $row);
+                    if (in_array($key, ['birth_date', 'exam_date'], true)) {
+                        $candidate[$key] = $this->normalizeSpreadsheetDate($cell);
+                    } else {
+                        $candidate[$key] = trim((string) $cell->getValue());
+                    }
+                }
+            }
+
+            if ($candidate['gender'] !== '') {
+                $genderClean = strtoupper(substr(trim($candidate['gender']), 0, 1));
+                if (!in_array($genderClean, ['M', 'F'], true)) {
+                    $genderClean = '';
+                }
+                $candidate['gender'] = $genderClean;
+            }
+
+            $candidate['status'] = $this->normalizeStatus($candidate['status']);
+
+            if ($candidate['name'] === '' && $candidate['document_number'] === '') {
+                continue;
+            }
+
+            $candidates[] = $candidate;
+        }
+
+        return ['candidates' => $candidates];
+    }
+
+    private function normalizeSpreadsheetDate($cell)
+    {
+        $value = $cell->getValue();
+        if ($value instanceof \DateTime) {
+            return $value->format('Y-m-d');
+        }
+
+        if (is_numeric($value) && \PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($cell)) {
+            try {
+                $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value);
+                return $date ? $date->format('Y-m-d') : '';
+            } catch (\Exception $e) {
+                // continuar con texto
+            }
+        }
+
+        return $this->parseDate(trim((string) $value))?->format('Y-m-d') ?? '';
+    }
+
+    private function normalizeStatus(string $status)
+    {
+        $clean = strtolower(trim($status));
+        if ($clean === '') {
+            return 'PENDIENTE';
+        }
+        if (str_contains($clean, 'no apto') || str_contains($clean, 'reprobado') || str_contains($clean, 'rechazado')) {
+            return 'RECHAZADO';
+        }
+        if (str_contains($clean, 'aplaz') || str_contains($clean, 'en curso')) {
+            return 'EN_CURSO';
+        }
+        if (str_contains($clean, 'apto') || str_contains($clean, 'finalizado') || str_contains($clean, 'completado')) {
+            return 'FINALIZADO';
+        }
+
+        return strtoupper($clean);
     }
 
     public function exportCandidates()

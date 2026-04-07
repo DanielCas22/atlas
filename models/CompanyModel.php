@@ -50,8 +50,42 @@ class CompanyModel extends BaseModel
         return $stmt->execute([$name, $contact, $id]);
     }
 
+    public function findByName($name)
+    {
+        $stmt = $this->db->prepare('SELECT id, name, contact FROM security_companies WHERE name = ? LIMIT 1');
+        $stmt->execute([$name]);
+        return $stmt->fetch();
+    }
+
+    public function addIfNotExists($name, $contact = null)
+    {
+        $name = trim($name);
+        if ($name === '') {
+            return false;
+        }
+
+        $company = $this->findByName($name);
+        if ($company) {
+            return $company['id'];
+        }
+
+        $this->add($name, $contact);
+        return $this->db->lastInsertId();
+    }
+
     public function delete($id)
     {
+        if (empty($id)) {
+            return false;
+        }
+
+        if (!class_exists('ExamModel')) {
+            require_once __DIR__ . '/ExamModel.php';
+        }
+
+        $examModel = new ExamModel();
+        $examModel->deleteByCompanyId($id);
+
         $stmt = $this->db->prepare('DELETE FROM security_companies WHERE id = ?');
         return $stmt->execute([$id]);
     }

@@ -134,6 +134,43 @@ body {
     background: linear-gradient(135deg, rgba(248, 249, 250, 0.8), rgba(241, 243, 244, 0.8));
 }
 
+/* Company files accordion clean style */
+.company-card {
+    border: none !important;
+    background: transparent !important;
+    margin-bottom: 1rem;
+}
+
+.company-card .accordion-button {
+    border: none !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: var(--text) !important;
+    border-radius: 18px !important;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+    transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.company-card .accordion-button:not(.collapsed) {
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.company-card .accordion-button:focus {
+    box-shadow: 0 0 0 0.2rem rgba(114,183,255,0.18) !important;
+}
+
+.company-card .accordion-body {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: none !important;
+    border-top: 1px solid rgba(255,255,255,0.08) !important;
+    border-bottom-left-radius: 18px !important;
+    border-bottom-right-radius: 18px !important;
+}
+
+.company-card .accordion-body .card {
+    background: rgba(255,255,255,0.05) !important;
+    border: none !important;
+}
+
 /* Button improvements */
 .btn {
     border-radius: 8px;
@@ -156,6 +193,98 @@ body {
 .btn-group .btn:last-child {
     margin-right: 0;
 }
+
+/* Bootstrap button overrides for theme consistency */
+.btn-primary {
+    background: var(--btn-bg) !important;
+    color: var(--btn-color) !important;
+    border: none !important;
+}
+
+.btn-primary:hover {
+    opacity: var(--btn-hover-opacity) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-outline-primary {
+    border-color: var(--btn-bg) !important;
+    color: var(--btn-color) !important;
+}
+
+.btn-outline-primary:hover {
+    background: var(--btn-bg) !important;
+    color: var(--btn-color) !important;
+}
+
+.btn-outline-secondary {
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    color: var(--text) !important;
+}
+
+.btn-outline-secondary:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-high) !important;
+}
+
+/* Input group styling for search */
+.search-input-group {
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.search-input-group .input-group-text {
+    background: transparent !important;
+    border: none !important;
+    color: var(--text) !important;
+    min-width: 48px;
+    justify-content: center;
+}
+
+.search-input-group .form-control {
+    border: none !important;
+    background: transparent !important;
+    color: var(--text) !important;
+    box-shadow: none !important;
+}
+
+.search-input-group .form-control:focus {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    color: var(--text-high) !important;
+}
+
+.search-input-group .btn {
+    border: none !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 0 24px 24px 0 !important;
+}
+
+.search-input-group .btn-primary {
+    background: var(--btn-bg) !important;
+    color: var(--btn-color) !important;
+}
+
+.search-input-group .btn-primary:hover {
+    opacity: var(--btn-hover-opacity) !important;
+    background: var(--btn-bg) !important;
+}
+
+.search-input-group .btn-outline-secondary {
+    border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 0 0 24px 0 !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    color: var(--text) !important;
+}
+
+.search-input-group .btn-outline-secondary:hover {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: var(--text-high) !important;
+}
+
+
 
 /* Table improvements */
 .table {
@@ -406,4 +535,217 @@ body {
 }
 .dashboard-card, .dashboard-card *, .dashboard-card .dashboard-label {
   color: #fff !important;
+}
+
+/* Global minimalistic rounded style overrides */
+:root {
+    --surface: rgba(255,255,255,0.08);
+    --surface-strong: rgba(255,255,255,0.12);
+    --surface-border: rgba(255,255,255,0.14);
+    --surface-border-strong: rgba(255,255,255,0.18);
+    --primary-soft: #4C7DBB;
+    --primary-strong: #2D5A96;
+    --accent: #72B7FF;
+    --text-soft: #E9F3FF;
+    --text-muted: #A0B0CA;
+    --bg-dark: #0E1826;
+    --bg-panel: rgba(28, 40, 57, 0.85);
+    --bg-panel-strong: rgba(23, 32, 49, 0.94);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: radial-gradient(circle at top left, rgba(85, 133, 208, 0.18), transparent 28%),
+                linear-gradient(180deg, #101924 0%, #17263d 100%);
+    color: var(--text);
+    min-height: 100vh;
+}
+
+body, button, input, textarea, select {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+button, .btn, a.btn, .form-control, .form-select, textarea {
+    border-radius: 14px !important;
+}
+
+.btn, button, .btn a {
+    border: none !important;
+    background: linear-gradient(135deg, var(--primary-soft), var(--primary-strong)) !important;
+    color: inherit !important;
+    box-shadow: 0 10px 24px rgba(17, 50, 96, 0.18) !important;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease !important;
+}
+
+.btn:hover, button:hover, .btn:focus, button:focus {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 14px 28px rgba(17, 50, 96, 0.22) !important;
+    background: linear-gradient(135deg, #5c8ad0, #3a6dae) !important;
+}
+
+.btn-outline-primary, .btn-outline-secondary, .btn-outline-success, .btn-outline-warning, .btn-outline-danger, .btn-outline-info {
+    color: var(--text) !important;
+    background: rgba(255,255,255,0.05) !important;
+    border: 1px solid rgba(255,255,255,0.16) !important;
+}
+
+.btn-outline-primary:hover, .btn-outline-secondary:hover, .btn-outline-success:hover, .btn-outline-warning:hover, .btn-outline-danger:hover, .btn-outline-info:hover {
+    background: rgba(255,255,255,0.12) !important;
+    color: #fff !important;
+}
+
+.card, .card-body, .card-header, .container, .login-card, .dashboard-card, .responsive-table, .order-card {
+    background: var(--bg-panel) !important;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.16) !important;
+}
+
+.card, .login-card, .dashboard-card, .order-card, .responsive-table, .topbar {
+    border-radius: 18px !important;
+}
+
+.card-header {
+    background: rgba(255,255,255,0.06) !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+    color: var(--text) !important;
+}
+
+.card-title, .card-header h5, .card-header h4, .card-header h3 {
+    color: var(--text) !important;
+}
+
+.form-control, .form-select, textarea {
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    background: rgba(255,255,255,0.06) !important;
+    color: var(--text) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
+.form-control:focus, .form-select:focus, textarea:focus {
+    outline: none !important;
+    border-color: rgba(114,183,255,0.9) !important;
+    box-shadow: 0 0 0 0.2rem rgba(114,183,255,0.18) !important;
+}
+
+input[type=file], .form-control[type=file] {
+    padding: 0.8rem 1rem;
+}
+
+textarea {
+    min-height: 180px;
+}
+
+label {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.navbar, .topbar {
+    background: rgba(8, 16, 32, 0.94) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.18) !important;
+}
+
+.navbar-brand, .navbar-nav .nav-link, .dropdown-item {
+    color: var(--text) !important;
+}
+
+.navbar-nav .nav-link {
+    padding: 0.55rem 1rem !important;
+    border-radius: 14px !important;
+}
+
+.navbar-nav .nav-link:hover, .dropdown-item:hover {
+    background: rgba(255,255,255,0.08) !important;
+}
+
+.dropdown-menu {
+    background: rgba(14, 23, 36, 0.96) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    border-radius: 18px !important;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.18) !important;
+}
+
+.alert, .alert-success, .alert-error {
+    border-radius: 16px !important;
+    padding: 1rem 1.2rem !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12) !important;
+}
+
+.alert-error {
+    background: rgba(255, 97, 97, 0.18) !important;
+    border-color: rgba(255, 97, 97, 0.26) !important;
+    color: #fff !important;
+}
+
+.alert-success {
+    background: rgba(61, 189, 134, 0.18) !important;
+    border-color: rgba(61, 189, 134, 0.28) !important;
+    color: #fff !important;
+}
+
+.table {
+    background: transparent !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+}
+
+.table thead th {
+    background: rgba(255,255,255,0.07) !important;
+    color: var(--text) !important;
+    border: none !important;
+}
+
+.table td, .table th {
+    border-top: none !important;
+    border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+    color: var(--text) !important;
+}
+
+.table tbody tr {
+    background: rgba(255,255,255,0.02) !important;
+}
+
+.table-hover tbody tr:hover {
+    background: rgba(255,255,255,0.08) !important;
+}
+
+.badge {
+    border-radius: 999px !important;
+    background: rgba(255,255,255,0.12) !important;
+    color: var(--text) !important;
+}
+
+.responsive-table {
+    background: rgba(255,255,255,0.03) !important;
+}
+
+.order-card {
+    border: 1px solid rgba(255,255,255,0.08) !important;
+    background: rgba(255,255,255,0.04) !important;
+}
+
+.btn-small {
+    border-radius: 12px !important;
+    background: rgba(255,255,255,0.08) !important;
+  color: var(--text) !important;
+.btn-small:hover {
+    background: rgba(255,255,255,0.12) !important;
+}
+
+.footer {
+    color: var(--text-muted) !important;
+}
+
+@media (max-width: 768px) {
+    .navbar-nav .nav-link {
+        padding: 0.6rem 0.85rem !important;
+    }
+    .form-grid {
+        gap: 1rem !important;
+    }
 }

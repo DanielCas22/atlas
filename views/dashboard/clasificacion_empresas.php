@@ -96,10 +96,25 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="examColumn" class="form-label fw-semibold">
-                                <i class="bi bi-clipbboard-check me-2"></i>Columna de Tipo Examen
+                            <label for="examDateColumn" class="form-label fw-semibold">
+                                <i class="bi bi-calendar2-event me-2"></i>Columna de Fecha de Examen
                             </label>
-                            <input type="text" class="form-control" id="examColumn" name="exam_column" placeholder="Ej: G, Tipo_Examen">
+                            <input type="text" class="form-control" id="examDateColumn" name="exam_date_column" placeholder="Ej: G, Fecha_Examen">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="resultColumn" class="form-label fw-semibold">
+                                <i class="bi bi-check2-circle me-2"></i>Columna de Resultado
+                            </label>
+                            <input type="text" class="form-control" id="resultColumn" name="result_column" placeholder="Ej: H, Resultado, Estado">
+                        </div>
+
+                        <div class="mb-4" id="customColumnsContainer"></div>
+
+                        <div class="mb-4">
+                            <button type="button" class="btn btn-secondary" id="addColumnBtn">
+                                <i class="bi bi-plus-circle me-2"></i>Agregar Columna Nueva
+                            </button>
                         </div>
 
                         <div class="d-flex gap-2">
@@ -111,6 +126,42 @@
                             </a>
                         </div>
                     </form>
+
+                    <script>
+                        let customColumnCount = 0;
+
+                        document.getElementById('addColumnBtn').addEventListener('click', function(e) {
+                            e.preventDefault();
+                            customColumnCount++;
+                            
+                            const columnId = 'custom_' + customColumnCount;
+                            const columnDiv = document.createElement('div');
+                            columnDiv.className = 'mb-3 p-3 border rounded bg-light';
+                            columnDiv.id = 'column-' + columnId;
+                            
+                            columnDiv.innerHTML = `
+                                <div class="row align-items-end">
+                                    <div class="col-md-8">
+                                        <label class="form-label fw-semibold">
+                                            <i class="bi bi-columns me-2"></i>Columna Personalizada
+                                        </label>
+                                        <input type="text" class="form-control" name="custom_column_${customColumnCount}" placeholder="Ej: G, Columna_Personalizada">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button type="button" class="btn btn-outline-danger w-100 remove-column-btn" data-column-id="${columnId}">
+                                            <i class="bi bi-trash me-1"></i>Eliminar
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                            
+                            document.getElementById('customColumnsContainer').appendChild(columnDiv);
+                            
+                            columnDiv.querySelector('.remove-column-btn').addEventListener('click', function() {
+                                columnDiv.remove();
+                            });
+                        });
+                    </script>
                 </div>
             </div>
         </div>

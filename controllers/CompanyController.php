@@ -78,10 +78,20 @@ class CompanyController
         $id = intval($_GET['id'] ?? 0);
 
         if ($id) {
-            $this->companyModel->delete($id);
+            try {
+                $deleted = $this->companyModel->delete($id);
+                if ($deleted) {
+                    header('Location: index.php?c=company&a=list&message=' . urlencode('Empresa eliminada correctamente.'));
+                } else {
+                    header('Location: index.php?c=company&a=list&error=' . urlencode('No se pudo eliminar la empresa.'));
+                }
+            } catch (Exception $e) {
+                header('Location: index.php?c=company&a=list&error=' . urlencode('Error al eliminar la empresa: ' . $e->getMessage()));
+            }
+        } else {
+            header('Location: index.php?c=company&a=list&error=' . urlencode('Empresa inválida.'));
         }
 
-        header('Location: index.php?c=company&a=list');
         exit;
     }
 

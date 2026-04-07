@@ -26,6 +26,22 @@
     <!-- Search Section -->
     <div class="row mb-4">
         <div class="col-12">
+            <?php if (!empty($_GET['message']) || !empty($_GET['error'])): ?>
+                <div class="mb-3">
+                    <?php if (!empty($_GET['message'])): ?>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <?= htmlspecialchars($_GET['message']) ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <?php endif; ?>
+                    <?php if (!empty($_GET['error'])): ?>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <?= htmlspecialchars($_GET['error']) ?>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
             <div class="card shadow-sm border-0">
                 <div class="card-body p-4">
                     <form method="GET" class="row g-3 align-items-end">
@@ -34,17 +50,14 @@
 
                         <div class="col-md-8">
                             <label for="searchInput" class="form-label fw-semibold">
-                                <i class="bi bi-search me-1"></i>Buscar Empresa
+                                Buscar Empresa
                             </label>
-                            <input type="text" class="form-control" id="searchInput" name="search"
-                                   value="<?= htmlspecialchars($_GET['search'] ?? '') ?>"
-                                   placeholder="Ingresa el nombre de la empresa...">
-                        </div>
-
-                        <div class="col-md-4">
-                            <div class="d-flex gap-2">
+                            <div class="input-group search-input-group rounded-4 overflow-hidden">
+                                <input type="text" class="form-control" id="searchInput" name="search"
+                                       value="<?= htmlspecialchars($_GET['search'] ?? '') ?>"
+                                       placeholder="Ingresa el nombre de la empresa...">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-search me-1"></i>Buscar
+                                    Buscar
                                 </button>
                                 <?php if (!empty($_GET['search'])): ?>
                                     <a href="index.php?c=company&a=list" class="btn btn-outline-secondary">
@@ -52,6 +65,10 @@
                                     </a>
                                 <?php endif; ?>
                             </div>
+                        </div>
+
+                        <div class="col-md-4 d-none">
+                            <!-- Espacio vacío para mantener el layout si es necesario -->
                         </div>
                     </form>
                 </div>

@@ -54,6 +54,12 @@
                                 <span class="fw-semibold">Clasificación por Empresas</span>
                             </a>
                         </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="index.php?c=dashboard&a=files" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-4">
+                                <i class="bi bi-folder-fill fs-1 mb-2"></i>
+                                <span class="fw-semibold">Archivos Clasificados</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

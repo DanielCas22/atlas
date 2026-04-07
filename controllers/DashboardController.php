@@ -190,7 +190,8 @@ class DashboardController
                             'phone' => trim($_POST['phone_column'] ?? ''),
                             'gender' => trim($_POST['gender_column'] ?? ''),
                             'birth' => trim($_POST['birth_column'] ?? ''),
-                            'exam' => trim($_POST['exam_column'] ?? ''),
+                            'exam_date' => trim($_POST['exam_date_column'] ?? ''),
+                            'result' => trim($_POST['result_column'] ?? ''),
                         ];
 
                         if (empty($columns['company'])) {
@@ -218,6 +219,212 @@ class DashboardController
         include __DIR__ . '/../views/dashboard/clasificacion_empresas.php';
     }
 
+    public function files()
+    {
+        $this->ensureAuth();
+
+        $success = $_GET['success'] ?? null;
+        $error = $_GET['error'] ?? null;
+
+        $baseDir = __DIR__ . '/../empresas_clasificadas';
+        $companies = [];
+
+        if (is_dir($baseDir)) {
+            $companyDirs = scandir($baseDir);
+            foreach ($companyDirs as $companyDir) {
+                if ($companyDir === '.' || $companyDir === '..') continue;
+
+                $companyPath = $baseDir . '/' . $companyDir;
+                if (is_dir($companyPath)) {
+                    $companies[$companyDir] = [
+                        'folders' => []
+                    ];
+
+                    $subDirs = scandir($companyPath);
+                    foreach ($subDirs as $subDir) {
+                        if ($subDir === '.' || $subDir === '..') continue;
+
+                        $subPath = $companyPath . '/' . $subDir;
+                        if (is_dir($subPath)) {
+                            $companies[$companyDir]['folders'][$subDir] = [
+                                'files' => []
+                            ];
+
+                            $files = scandir($subPath);
+                            foreach ($files as $file) {
+                                if ($file === '.' || $file === '..') continue;
+
+                                $filePath = $subPath . '/' . $file;
+                                if (is_file($filePath)) {
+                                    $companies[$companyDir]['folders'][$subDir]['files'][] = [
+                                        'name' => $file,
+                                        'size' => filesize($filePath),
+                                        'modified' => date('d/m/Y H:i', filemtime($filePath))
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        include __DIR__ . '/../views/dashboard/files.php';
+    }
+
+    public function download()
+    {
+        $this->ensureAuth();
+
+        $company = $_GET['company'] ?? '';
+        $folder = $_GET['folder'] ?? '';
+        $file = $_GET['file'] ?? '';
+
+        if (!$company || !$folder || !$file) {
+            header('HTTP/1.1 400 Bad Request');
+            echo 'Parámetros inválidos';
+            exit;
+        }
+
+        $baseDir = __DIR__ . '/../empresas_clasificadas';
+        $filePath = $baseDir . '/' . $company . '/' . $folder . '/' . $file;
+
+        // Validar que el archivo existe y está dentro del directorio permitido
+        if (!file_exists($filePath) || !is_file($filePath)) {
+            header('HTTP/1.1 404 Not Found');
+            echo 'Archivo no encontrado';
+            exit;
+        }
+
+        // Verificar que la ruta está dentro de empresas_clasificadas
+        $realPath = realpath($filePath);
+        $realBaseDir = realpath($baseDir);
+        if (strpos($realPath, $realBaseDir) !== 0) {
+            header('HTTP/1.1 403 Forbidden');
+            echo 'Acceso denegado';
+            exit;
+        }
+
+        // Enviar el archivo
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . basename($file) . '"');
+        header('Content-Length: ' . filesize($filePath));
+        readfile($filePath);
+        exit;
+    }
+
+    public function deleteFile()
+    {
+        $this->ensureAuth();
+
+        $company = $_GET['company'] ?? '';
+        $folder = $_GET['folder'] ?? '';
+        $file = $_GET['file'] ?? '';
+
+        if (!$company || !$folder || !$file) {
+            header('Location: index.php?c=dashboard&a=files&error=Parámetros inválidos');
+            exit;
+        }
+
+        $baseDir = __DIR__ . '/../empresas_clasificadas';
+        $filePath = $baseDir . '/' . $company . '/' . $folder . '/' . $file;
+
+        // Validar que el archivo existe y está dentro del directorio permitido
+        if (!file_exists($filePath) || !is_file($filePath)) {
+            header('Location: index.php?c=dashboard&a=files&error=Archivo no encontrado: ' . htmlspecialchars($filePath));
+            exit;
+        }
+
+        // Verificar que la ruta está dentro de empresas_clasificadas
+        $realPath = realpath($filePath);
+        $realBaseDir = realpath($baseDir);
+        if (strpos($realPath, $realBaseDir) !== 0) {
+            header('Location: index.php?c=dashboard&a=files&error=Acceso denegado a la ruta');
+            exit;
+        }
+
+        // Verificar permisos de escritura en el directorio
+        $dir = dirname($filePath);
+        if (!is_writable($dir)) {
+            header('Location: index.php?c=dashboard&a=files&error=El directorio no tiene permisos de escritura: ' . htmlspecialchars($dir));
+            exit;
+        }
+
+        // Intentar eliminar el archivo
+        if (unlink($filePath)) {
+            header('Location: index.php?c=dashboard&a=files&success=Archivo eliminado correctamente');
+        } else {
+            $error = error_get_last();
+            $errorMsg = isset($error['message']) ? $error['message'] : 'Error desconocido';
+            header('Location: index.php?c=dashboard&a=files&error=Error al eliminar el archivo: ' . htmlspecialchars($errorMsg));
+        }
+        exit;
+    }
+
+    public function deleteFiles()
+    {
+        $this->ensureAuth();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['files'])) {
+            header('Location: index.php?c=dashboard&a=files&error=Solicitud inválida');
+            exit;
+        }
+
+        $files = $_POST['files'];
+        if (!is_array($files)) {
+            $files = [$files];
+        }
+
+        $baseDir = __DIR__ . '/../empresas_clasificadas';
+        $deletedCount = 0;
+        $errors = [];
+
+        foreach ($files as $fileData) {
+            $parts = explode('|', $fileData, 3);
+            if (count($parts) !== 3) {
+                $errors[] = "Formato inválido para: $fileData";
+                continue;
+            }
+
+            list($company, $folder, $file) = $parts;
+            $filePath = $baseDir . '/' . $company . '/' . $folder . '/' . $file;
+
+            // Validar que el archivo existe
+            if (!file_exists($filePath) || !is_file($filePath)) {
+                $errors[] = "Archivo no encontrado: $file";
+                continue;
+            }
+
+            // Verificar que la ruta está dentro de empresas_clasificadas
+            $realPath = realpath($filePath);
+            $realBaseDir = realpath($baseDir);
+            if (strpos($realPath, $realBaseDir) !== 0) {
+                $errors[] = "Acceso denegado para: $file";
+                continue;
+            }
+
+            // Intentar eliminar
+            if (unlink($filePath)) {
+                $deletedCount++;
+            } else {
+                $error = error_get_last();
+                $errorMsg = isset($error['message']) ? $error['message'] : 'Error desconocido';
+                $errors[] = "Error eliminando $file: $errorMsg";
+            }
+        }
+
+        if ($deletedCount > 0) {
+            $message = "Se eliminaron $deletedCount archivo(s) correctamente.";
+            if (!empty($errors)) {
+                $message .= " Errores: " . implode(', ', $errors);
+            }
+            header('Location: index.php?c=dashboard&a=files&success=' . urlencode($message));
+        } else {
+            header('Location: index.php?c=dashboard&a=files&error=' . urlencode('No se pudo eliminar ningún archivo. ' . implode(', ', $errors)));
+        }
+        exit;
+    }
+
     private function processExcelFile($filePath, $columns, $fileExt)
     {
         $results = [];
@@ -241,6 +448,10 @@ class DashboardController
                 
                 $highestRow = $worksheet->getHighestRow();
                 for ($rowNum = 2; $rowNum <= $highestRow; $rowNum++) {
+                    if ($this->rowHasCellFill($worksheet, $rowNum, $colIndices)) {
+                        continue;
+                    }
+
                     $company = $this->getCellValue($worksheet, $colIndices['company'], $rowNum);
                     
                     if (empty($company)) continue;
@@ -259,7 +470,9 @@ class DashboardController
                         'phone' => $this->getCellValue($worksheet, $colIndices['phone'], $rowNum),
                         'gender' => $this->getCellValue($worksheet, $colIndices['gender'], $rowNum),
                         'birth' => $this->getCellValue($worksheet, $colIndices['birth'], $rowNum),
-                        'exam' => $this->getCellValue($worksheet, $colIndices['exam'], $rowNum),
+                        'exam_date' => $this->getCellValue($worksheet, $colIndices['exam_date'], $rowNum),
+                        'result' => $this->getCellValue($worksheet, $colIndices['result'], $rowNum),
+                        'exam' => 'Psicofisico',
                     ];
                     
                     $companiesData[$company][] = $patientData;
@@ -310,7 +523,51 @@ class DashboardController
         
         $columnLetter = $this->indexToColumnLetter($colIndex);
         $cellAddress = $columnLetter . $rowNum;
-        return trim($worksheet->getCell($cellAddress)->getValue() ?? '');
+        $cell = $worksheet->getCell($cellAddress);
+        $value = $cell->getValue();
+
+        return trim($this->normalizeWorksheetCellValue($cell, $value));
+    }
+
+    private function normalizeWorksheetCellValue($cell, $value)
+    {
+        if ($value instanceof \DateTime) {
+            return $value->format('Y-m-d');
+        }
+
+        if (is_numeric($value) && \PhpOffice\PhpSpreadsheet\Shared\Date::isDateTime($cell)) {
+            try {
+                $date = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value);
+                return $date instanceof \DateTime ? $date->format('Y-m-d') : trim((string) $value);
+            } catch (\Exception $e) {
+                // ignore and return raw value below
+            }
+        }
+
+        if (is_string($value)) {
+            return trim($value);
+        }
+
+        return trim((string) ($value ?? ''));
+    }
+
+    private function rowHasCellFill($worksheet, $rowNum, $colIndices)
+    {
+        foreach ($colIndices as $colIndex) {
+            if ($colIndex === false || $colIndex === null) {
+                continue;
+            }
+
+            $cellAddress = $this->indexToColumnLetter($colIndex) . $rowNum;
+            $fill = $worksheet->getStyle($cellAddress)->getFill();
+            $fillType = $fill->getFillType();
+
+            if (!empty($fillType) && $fillType !== \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_NONE) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function createCompanyFolders($companiesData)
@@ -378,7 +635,7 @@ class DashboardController
             }
             
             // Encabezados
-            $headers = ['Nombre', 'Documento', 'Teléfono', 'Género', 'Fecha Nacimiento', 'Tipo Examen'];
+            $headers = ['Nombre', 'Documento', 'Teléfono', 'Género', 'Fecha Nacimiento', 'Fecha Examen', 'Resultado', 'Tipo Examen'];
             $sheet->fromArray([$headers], null, 'A' . $startRow);
             
             // Aplicar estilo a encabezados
@@ -388,7 +645,7 @@ class DashboardController
                 'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
             ];
             
-            for ($col = 'A'; $col <= 'F'; $col++) {
+            for ($col = 'A'; $col <= 'H'; $col++) {
                 $sheet->getStyle($col . $startRow)->applyFromArray($headerStyle);
             }
             
@@ -401,13 +658,15 @@ class DashboardController
                     $sheet->setCellValue('C' . $rowNum, $patient['phone']);
                     $sheet->setCellValue('D' . $rowNum, $patient['gender']);
                     $sheet->setCellValue('E' . $rowNum, $patient['birth']);
-                    $sheet->setCellValue('F' . $rowNum, $patient['exam']);
+                    $sheet->setCellValue('F' . $rowNum, $patient['exam_date']);
+                    $sheet->setCellValue('G' . $rowNum, $patient['result']);
+                    $sheet->setCellValue('H' . $rowNum, $patient['exam']);
                     $rowNum++;
                 }
             }
             
             // Ajustar ancho de columnas
-            foreach (range('A', 'F') as $col) {
+            foreach (range('A', 'H') as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
             
@@ -488,7 +747,9 @@ class DashboardController
                 'phone' => $row[$colIndices['phone'] ?? 3] ?? '',
                 'gender' => $row[$colIndices['gender'] ?? 4] ?? '',
                 'birth' => $row[$colIndices['birth'] ?? 5] ?? '',
-                'exam' => $row[$colIndices['exam'] ?? 6] ?? '',
+                'exam_date' => $row[$colIndices['exam_date'] ?? 6] ?? '',
+                'result' => $row[$colIndices['result'] ?? 7] ?? '',
+                'exam' => 'Psicofisico',
             ];
             
             $companiesData[$company][] = $patientData;

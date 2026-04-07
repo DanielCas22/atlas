@@ -11,6 +11,11 @@ class AuthController
 
     public function login()
     {
+        if (!empty($_SESSION['user'])) {
+            header('Location: index.php?c=dashboard&a=index');
+            exit;
+        }
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $username = trim($_POST['username'] ?? '');
             $password = $_POST['password'] ?? '';
