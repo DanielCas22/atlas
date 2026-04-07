@@ -123,10 +123,13 @@
                         <i class="bi bi-info-circle me-2"></i>Instrucciones
                     </h6>
                     <ul class="mb-0 ps-3">
-                        <li class="mb-2">Descarga el archivo Excel con los datos de candidatos</li>
-                        <li class="mb-2">Asegúrate de que contenga una columna con el nombre de la empresa</li>
+                        <li class="mb-2">Prepara tu archivo Excel con columnas de datos de candidatos</li>
+                        <li class="mb-2">Especifica qué columna contiene el nombre de la empresa</li>
+                        <li class="mb-2">Especifica las columnas de datos personales (nombre, documento, etc.)</li>
                         <li class="mb-2">Sube el archivo para procesar automáticamente</li>
-                        <li class="mb-2">El sistema contará candidatos por empresa</li>
+                        <li class="mb-2">El sistema clasificará pacientes por empresa</li>
+                        <li class="mb-2">Crea carpetas con reportes en la carpeta "REPORTE GUARDA"</li>
+                        <li class="mb-2">Los reportes llevan la fecha del procesamiento</li>
                     </ul>
                 </div>
             </div>

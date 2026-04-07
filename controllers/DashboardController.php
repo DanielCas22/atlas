@@ -319,56 +319,119 @@ class DashboardController
         
         // Crear directorio base si no existe
         if (!is_dir($baseDir)) {
-            mkdir($baseDir, 0755, true);
+            if (!@mkdir($baseDir, 0777, true)) {
+                throw new Exception('No se puede crear el directorio base. Verifica los permisos.');
+            }
         }
+        
+        // Fecha actual para el archivo
+        $fechaHoy = date('d_m_Y');
         
         // Crear carpeta para cada empresa
         foreach ($companiesData as $company => $patients) {
-            $companyDir = $baseDir . '/' . $this->sanitizeFileName($company);
-            $patientsDir = $companyDir . '/PACIENTES_POR_ORDENAR';
+            $safeName = $this->sanitizeFileName($company);
+            $companyDir = $baseDir . '/' . $safeName;
+            $reportDir = $companyDir . '/REPORTE GUARDA';
             
             // Crear directorios
-            if (!is_dir($patientsDir)) {
-                mkdir($patientsDir, 0755, true);
+            if (!is_dir($companyDir)) {
+                if (!@mkdir($companyDir, 0777, true)) {
+                    throw new Exception("No se puede crear la carpeta de empresa: $company");
+                }
             }
             
+            if (!is_dir($reportDir)) {
+                if (!@mkdir($reportDir, 0777, true)) {
+                    throw new Exception("No se puede crear la carpeta REPORTE GUARDA para: $company");
+                }
+            }
+            
+            // Generar nombre del archivo con fecha
+            $fileName = 'REPORTE_' . $fechaHoy . '.xlsx';
+            $filePath = $reportDir . '/' . $fileName;
+            
             // Generar archivo Excel con los pacientes
-            $this->generatePatientExcelFile($patients, $patientsDir . '/pacientes.xlsx');
+            try {
+                $this->generatePatientExcelFile($patients, $filePath, $company);
+            } catch (Exception $e) {
+                throw new Exception("Error generar reporte para $company: " . $e->getMessage());
+            }
         }
     }
 
-    private function generatePatientExcelFile($patients, $filePath)
+    private function generatePatientExcelFile($patients, $filePath, $empresa = '')
     {
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Pacientes');
-        
-        // Encabezados
-        $headers = ['Nombre', 'Documento', 'Teléfono', 'Género', 'Fecha Nacimiento', 'Tipo Examen'];
-        $sheet->fromArray([$headers], null, 'A1');
-        
-        // Datos de pacientes
-        if (!empty($patients)) {
-            $rowNum = 2;
-            foreach ($patients as $patient) {
-                $sheet->setCellValue('A' . $rowNum, $patient['name']);
-                $sheet->setCellValue('B' . $rowNum, $patient['document']);
-                $sheet->setCellValue('C' . $rowNum, $patient['phone']);
-                $sheet->setCellValue('D' . $rowNum, $patient['gender']);
-                $sheet->setCellValue('E' . $rowNum, $patient['birth']);
-                $sheet->setCellValue('F' . $rowNum, $patient['exam']);
-                $rowNum++;
+        try {
+            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Reporte');
+            
+            // Información del reporte en las primeras filas
+            if (!empty($empresa)) {
+                $sheet->setCellValue('A1', 'EMPRESA: ' . $empresa);
+                $sheet->setCellValue('A2', 'FECHA: ' . date('d/m/Y H:i:s'));
+                $sheet->getRowDimension(1)->setRowHeight(25);
+                $sheet->getRowDimension(2)->setRowHeight(25);
+                $startRow = 4;
+            } else {
+                $startRow = 1;
             }
+            
+            // Encabezados
+            $headers = ['Nombre', 'Documento', 'Teléfono', 'Género', 'Fecha Nacimiento', 'Tipo Examen'];
+            $sheet->fromArray([$headers], null, 'A' . $startRow);
+            
+            // Aplicar estilo a encabezados
+            $headerStyle = [
+                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '366092']],
+                'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+            ];
+            
+            for ($col = 'A'; $col <= 'F'; $col++) {
+                $sheet->getStyle($col . $startRow)->applyFromArray($headerStyle);
+            }
+            
+            // Datos de pacientes
+            if (!empty($patients)) {
+                $rowNum = $startRow + 1;
+                foreach ($patients as $patient) {
+                    $sheet->setCellValue('A' . $rowNum, $patient['name']);
+                    $sheet->setCellValue('B' . $rowNum, $patient['document']);
+                    $sheet->setCellValue('C' . $rowNum, $patient['phone']);
+                    $sheet->setCellValue('D' . $rowNum, $patient['gender']);
+                    $sheet->setCellValue('E' . $rowNum, $patient['birth']);
+                    $sheet->setCellValue('F' . $rowNum, $patient['exam']);
+                    $rowNum++;
+                }
+            }
+            
+            // Ajustar ancho de columnas
+            foreach (range('A', 'F') as $col) {
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+            
+            // Guardar archivo
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            
+            // Validar que el directorio existe y es escribible
+            $dir = dirname($filePath);
+            if (!is_dir($dir)) {
+                throw new Exception("El directorio no existe: $dir");
+            }
+            if (!is_writable($dir)) {
+                throw new Exception("El directorio no tiene permisos de escritura: $dir");
+            }
+            
+            $writer->save($filePath);
+            
+            if (!file_exists($filePath)) {
+                throw new Exception("El archivo no se guardó correctamente: $filePath");
+            }
+            
+        } catch (Exception $e) {
+            throw new Exception("Error al generar el archivo Excel: " . $e->getMessage());
         }
-        
-        // Ajustar ancho de columnas
-        foreach (range('A', 'F') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-        
-        // Guardar archivo
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-        $writer->save($filePath);
     }
 
     private function sanitizeFileName($fileName)
