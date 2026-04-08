@@ -82,9 +82,10 @@
                                     'FINALIZADO' => 'Apto',
                                     'RECHAZADO' => 'No Apto',
                                     'EN_CURSO' => 'Aplazado',
+                                    'SIN_RESULTADO' => 'Sin resultado',
                                     'PENDIENTE' => 'Pendiente'
                                 ];
-                                echo htmlspecialchars($statusMap[$exam['status']] ?? $exam['status']);
+                                echo htmlspecialchars($statusMap[$exam['status']] ?? 'Pendiente');
                             ?></td>
                             <td><?= htmlspecialchars($exam['order_number'] ?? '') ?></td>
                             <td>

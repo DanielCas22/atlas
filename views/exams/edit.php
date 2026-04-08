@@ -39,6 +39,7 @@
         <option value="FINALIZADO" <?= (isset($exam['status']) && $exam['status'] === 'FINALIZADO') ? 'selected' : '' ?>>Apto</option>
         <option value="RECHAZADO" <?= (isset($exam['status']) && $exam['status'] === 'RECHAZADO') ? 'selected' : '' ?>>No apto</option>
         <option value="EN_CURSO" <?= (isset($exam['status']) && $exam['status'] === 'EN_CURSO') ? 'selected' : '' ?>>Aplazado</option>
+        <option value="SIN_RESULTADO" <?= (isset($exam['status']) && $exam['status'] === 'SIN_RESULTADO') ? 'selected' : '' ?>>Sin resultado</option>
     </select>
 
     <div></div>

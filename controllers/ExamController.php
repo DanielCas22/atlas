@@ -39,7 +39,13 @@ class ExamController
             $exam_type_id = intval($_POST['exam_type_id'] ?? 0);
             $order_number = trim($_POST['order_number'] ?? '');
 
-            $company_id = intval($companyInput);
+            // Solo tratar como ID cuando el valor es un número entero puro.
+            if (preg_match('/^[0-9]+$/', $companyInput)) {
+                $company_id = intval($companyInput);
+            } else {
+                $company_id = 0;
+            }
+
             if (!$company_id && $companyInput !== '') {
                 $company_id = $companyModel->addIfNotExists($companyInput);
             }
@@ -66,9 +72,8 @@ class ExamController
 
             if (empty($error) && $company_id && $exam_type_id && !empty($candidates) && !empty($order_number)) {
                 foreach ($candidates as $candidate) {
-                    if (empty($candidate['order_number'])) {
-                        $candidate['order_number'] = $order_number;
-                    }
+                    // Usar siempre el número de orden ingresado manualmente para todos los candidatos
+                    $candidate['order_number'] = $order_number;
                     $status = $candidate['status'] ?? 'PENDIENTE';
                     $this->examModel->add(
                         $company_id,
@@ -106,7 +111,7 @@ class ExamController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = intval($_POST['id'] ?? 0);
             $status = $_POST['status'] ?? '';
-            if ($id && in_array($status, ['PENDIENTE','EN_CURSO','FINALIZADO','RECHAZADO'])) {
+            if ($id && in_array($status, ['PENDIENTE','EN_CURSO','FINALIZADO','RECHAZADO','SIN_RESULTADO'])) {
                 $this->examModel->updateStatus($id, $status);
             }
         }
@@ -160,6 +165,21 @@ class ExamController
         }
 
         include __DIR__ . '/../views/exams/edit.php';
+    }
+
+    public function view()
+    {
+        $this->ensureAuth();
+
+        $id = intval($_GET['id'] ?? 0);
+        $exam = $this->examModel->findById($id);
+
+        if (!$exam) {
+            header('Location: index.php?c=exam&a=list');
+            exit;
+        }
+
+        include __DIR__ . '/../views/exams/view.php';
     }
 
     private function performOCR(string $tmpFile)
@@ -240,7 +260,7 @@ class ExamController
                 $isDate = $this->isValidDate($part);
                 $isGender = preg_match('/^[MF]$/i', $part);
                 $isPhone = preg_match('/^(3\d{7,9}|\d{7,13})$/', $clean);
-                $isStatus = preg_match('/\b(apto|no\s+apto|reprobado|finalizado|completado|aplazado)\b/i', $part);
+                $isStatus = preg_match('/\b(sin\s+resultado|apto|no\s+apto|reprobado|finalizado|completado|aplazado)\b/i', $part);
                 $isOrder = preg_match('/^\d{3,}$/', $clean);
                 $isSkipToken = preg_match('/\b(colombia|bogota|d\.c|activo|inactivo|usuarios?)\b/i', $part);
 
@@ -291,10 +311,17 @@ class ExamController
             $foundStatus = null;
             foreach ($parts as $idx => $part) {
                 $low = mb_strtolower($part);
-                if (preg_match('/\b(apto|no\s+apto|reprobado|finalizado|completado|aplazado)\b/i', $part)) {
+                if ($low === 'sin' && isset($parts[$idx + 1]) && mb_strtolower(trim($parts[$idx + 1])) === 'resultado') {
+                    $foundStatus = 'SIN_RESULTADO';
+                    unset($parts[$idx], $parts[$idx + 1]);
+                    break;
+                }
+                if (preg_match('/\b(sin\s+resultado|apto|no\s+apto|reprobado|finalizado|completado|aplazado)\b/i', $part)) {
                     if (stripos($low, 'no apto') !== false || stripos($low, 'reprobado') !== false) {
                         $foundStatus = 'RECHAZADO';
-                    } elseif (stripos($low, 'aplazado') !== false) {
+                    } elseif (stripos($low, 'sin resultado') !== false || stripos($low, 'sinresultado') !== false) {
+                        $foundStatus = 'SIN_RESULTADO';
+                    } elseif (stripos($low, 'aplazado') !== false || stripos($low, 'en curso') !== false) {
                         $foundStatus = 'EN_CURSO';
                     } elseif (stripos($low, 'apto') !== false || stripos($low, 'finalizado') !== false || stripos($low, 'completado') !== false) {
                         $foundStatus = 'FINALIZADO';
@@ -565,6 +592,9 @@ class ExamController
         if (str_contains($clean, 'no apto') || str_contains($clean, 'reprobado') || str_contains($clean, 'rechazado')) {
             return 'RECHAZADO';
         }
+        if (str_contains($clean, 'sin resultado') || str_contains($clean, 'sinresultado')) {
+            return 'SIN_RESULTADO';
+        }
         if (str_contains($clean, 'aplaz') || str_contains($clean, 'en curso')) {
             return 'EN_CURSO';
         }
@@ -683,9 +713,11 @@ class ExamController
             } elseif ($status === 'RECHAZADO') {
                 $resultado = 'NO APTO';
             } elseif ($status === 'EN_CURSO') {
-                $resultado = 'APLazADO';
+                $resultado = 'APLAZADO';
+            } elseif ($status === 'SIN_RESULTADO') {
+                $resultado = 'SIN RESULTADO';
             } else {
-                $resultado = $exam['status'];
+                $resultado = $status ?: 'PENDIENTE';
             }
             $sheet->setCellValue('I' . $row, $resultado);
             $sheet->setCellValue('J' . $row, $exam['order_number']);

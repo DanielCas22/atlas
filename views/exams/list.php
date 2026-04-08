@@ -105,9 +105,10 @@
                                                 'FINALIZADO' => ['Apto', 'success'],
                                                 'RECHAZADO' => ['No Apto', 'danger'],
                                                 'EN_CURSO' => ['Aplazado', 'warning'],
+                                                'SIN_RESULTADO' => ['Sin resultado', 'info'],
                                                 'PENDIENTE' => ['Pendiente', 'secondary']
                                             ];
-                                            $statusInfo = $statusMap[$exam['status']] ?? [$exam['status'], 'secondary'];
+                                            $statusInfo = $statusMap[$exam['status']] ?? ['Pendiente', 'secondary'];
                                             ?>
                                             <span class="badge bg-<?= $statusInfo[1] ?>">
                                                 <?= htmlspecialchars($statusInfo[0]) ?>

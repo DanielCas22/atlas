@@ -63,4 +63,31 @@ class UserModel extends BaseModel
         $stmt = $this->db->prepare('DELETE FROM users WHERE id = ?');
         return $stmt->execute([$id]);
     }
+
+    public function findByEmail(string $email)
+    {
+        $stmt = $this->db->prepare('SELECT id, username, email FROM users WHERE email = ? LIMIT 1');
+        $stmt->execute([$email]);
+        return $stmt->fetch();
+    }
+
+    public function savePasswordReset(int $userId, string $token, int $expiresInMinutes = 30)
+    {
+        $expiresAt = date('Y-m-d H:i:s', time() + ($expiresInMinutes * 60));
+        $stmt = $this->db->prepare('UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?');
+        return $stmt->execute([$token, $expiresAt, $userId]);
+    }
+
+    public function findByResetToken(string $token)
+    {
+        $stmt = $this->db->prepare('SELECT id, username, email, reset_token_expires FROM users WHERE reset_token = ? AND reset_token_expires > NOW() LIMIT 1');
+        $stmt->execute([$token]);
+        return $stmt->fetch();
+    }
+
+    public function clearResetToken(int $userId)
+    {
+        $stmt = $this->db->prepare('UPDATE users SET reset_token = NULL, reset_token_expires = NULL WHERE id = ?');
+        return $stmt->execute([$userId]);
+    }
 }

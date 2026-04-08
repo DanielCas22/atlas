@@ -5,9 +5,9 @@
     <div class="row w-100 justify-content-center">
         <div class="col-md-6 col-lg-4">
             <div class="login-card">
-                <h2>Atlas Seguridad</h2>
+                <h2>Establecer Nueva Contraseña</h2>
                 <p class="text-center mb-4" style="color: rgba(255,255,255,.75); font-size: 0.95rem; line-height: 1.4;">
-                    Sistema de Gestión de Exámenes
+                    Para: <strong><?= htmlspecialchars($user['username'] ?? 'Usuario') ?></strong>
                 </p>
 
                 <?php if (!empty($error)): ?>
@@ -17,21 +17,13 @@
                     </div>
                 <?php endif; ?>
 
-                <form method="post" action="index.php?c=auth&a=login">
-                    <div class="input-group username">
-                        <span class="input-icon"><i class="bi bi-person"></i></span>
-                        <input type="text" id="username" name="username"
-                               class="form-control"
-                               placeholder="Usuario" required autocomplete="username"
-                               style="width: 100%; margin-bottom: 1rem; padding-left: 2.6rem;">
-                    </div>
-
+                <form method="post" action="index.php?c=auth&a=reset&token=<?= htmlspecialchars($_GET['token'] ?? '') ?>">
                     <div class="input-group password">
                         <span class="input-icon"><i class="bi bi-lock"></i></span>
                         <div class="password-wrapper" style="width: 100%;">
                             <input type="password" id="password-field" name="password"
                                    class="form-control"
-                                   placeholder="Contraseña" required autocomplete="current-password"
+                                   placeholder="Nueva contraseña" required 
                                    style="width: 100%; margin-bottom: 1rem; padding-left: 2.6rem;">
                             <button type="button" class="password-toggle" id="toggle-password" aria-label="Mostrar contraseña">
                                 <i class="bi bi-eye"></i>
@@ -39,28 +31,38 @@
                         </div>
                     </div>
 
-                    <div class="login-extras">
-                        <label class="form-check-label" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
-                            <input type="checkbox" class="form-check-input" id="remember" name="remember" style="width: auto; margin: 0;">
-                            Recordarme
-                        </label>
-                        <a href="index.php?c=auth&a=forgot" class="forgot">¿Olvidaste tu contraseña?</a>
+                    <div class="input-group password" style="margin-top: 1rem;">
+                        <span class="input-icon"><i class="bi bi-lock-check"></i></span>
+                        <div class="password-wrapper" style="width: 100%;">
+                            <input type="password" id="confirm-field" name="confirm_password"
+                                   class="form-control"
+                                   placeholder="Confirmar contraseña" required 
+                                   style="width: 100%; margin-bottom: 1rem; padding-left: 2.6rem;">
+                            <button type="button" class="password-toggle" id="toggle-confirm" aria-label="Mostrar contraseña">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
                     </div>
 
+                    <p style="font-size: 0.85rem; color: rgba(255,255,255,.7); margin-bottom: 1rem;">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Mínimo 6 caracteres
+                    </p>
+
                     <button type="submit" class="primary-btn">
-                        <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
+                        <i class="bi bi-check-circle me-2"></i>Actualizar Contraseña
                     </button>
                 </form>
 
-                <p class="signup">
-                    ¿No tienes cuenta? <strong>Contacta al administrador</strong>
+                <p class="signup" style="margin-top: 1.5rem;">
+                    <a href="index.php?c=auth&a=login" style="color: #fff; text-decoration: underline;">Volver al login</a>
                 </p>
             </div>
 
             <div class="text-center mt-4">
                 <p class="text-white-50 small mb-0">
                     <i class="bi bi-shield-lock me-1"></i>
-                    Acceso seguro y confidencial
+                    Actualización segura
                 </p>
             </div>
         </div>
@@ -74,6 +76,16 @@
         togglePassword.addEventListener('click', function () {
             const isPassword = passwordField.type === 'password';
             passwordField.type = isPassword ? 'text' : 'password';
+            this.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+        });
+    }
+
+    const toggleConfirm = document.getElementById('toggle-confirm');
+    const confirmField = document.getElementById('confirm-field');
+    if (toggleConfirm && confirmField) {
+        toggleConfirm.addEventListener('click', function () {
+            const isPassword = confirmField.type === 'password';
+            confirmField.type = isPassword ? 'text' : 'password';
             this.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
         });
     }
