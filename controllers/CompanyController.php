@@ -13,6 +13,9 @@ class CompanyController
     {
         $this->ensureAuth();
 
+        // Sincronizar empresas que ya existen en la carpeta de archivos clasificados
+        $this->companyModel->syncClassifiedCompanies();
+
         $search = trim($_GET['search'] ?? '');
         if (!empty($search)) {
             $companies = $this->companyModel->searchByName($search);

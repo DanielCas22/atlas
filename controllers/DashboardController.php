@@ -168,6 +168,7 @@ class DashboardController
         $results = null;
         $error = null;
         $success = null;
+        $syncSummary = null;
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Validar que se haya subido un archivo
@@ -201,6 +202,7 @@ class DashboardController
                             try {
                                 $results = $this->processExcelFile($filePath, $columns, $fileExt);
                                 if (is_array($results) && !empty($results)) {
+                                    $syncSummary = $this->syncCompaniesFromList(array_keys($results));
                                     $success = 'Archivo procesado correctamente. Se encontraron ' . count($results) . ' empresas. Los pacientes han sido clasificados y guardados en carpetas.';
                                 } else {
                                     $error = 'El archivo no contiene datos válidos.';
@@ -219,9 +221,81 @@ class DashboardController
         include __DIR__ . '/../views/dashboard/clasificacion_empresas.php';
     }
 
+    public function syncClassifiedCompanies()
+    {
+        $this->ensureAuth();
+
+        $syncSummary = $this->syncCompaniesFromFolders();
+        $success = 'Sincronización completada. Empresas importadas: ' . $syncSummary['added'] . ', existentes: ' . $syncSummary['existing'];
+        if ($syncSummary['failed'] > 0) {
+            $success .= ', errores: ' . $syncSummary['failed'];
+        }
+
+        $results = null;
+        $error = null;
+
+        include __DIR__ . '/../views/dashboard/clasificacion_empresas.php';
+    }
+
+    private function syncCompaniesFromList(array $companyNames)
+    {
+        $companyModel = new CompanyModel();
+        $summary = [
+            'added' => 0,
+            'existing' => 0,
+            'failed' => 0,
+        ];
+
+        foreach ($companyNames as $companyName) {
+            $companyName = trim($companyName);
+            if ($companyName === '') {
+                continue;
+            }
+
+            try {
+                if ($companyModel->findByName($companyName)) {
+                    $summary['existing']++;
+                } else {
+                    $companyModel->add($companyName);
+                    $summary['added']++;
+                }
+            } catch (Exception $e) {
+                error_log('Error sincronizando empresa: ' . $e->getMessage());
+                $summary['failed']++;
+            }
+        }
+
+        return $summary;
+    }
+
+    private function syncCompaniesFromFolders()
+    {
+        $baseDir = __DIR__ . '/../empresas_clasificadas';
+        $companyNames = [];
+
+        if (is_dir($baseDir)) {
+            $companyDirs = scandir($baseDir);
+            foreach ($companyDirs as $companyDir) {
+                if ($companyDir === '.' || $companyDir === '..') {
+                    continue;
+                }
+
+                $companyPath = $baseDir . '/' . $companyDir;
+                if (is_dir($companyPath)) {
+                    $companyNames[] = $companyDir;
+                }
+            }
+        }
+
+        return $this->syncCompaniesFromList($companyNames);
+    }
+
     public function files()
     {
         $this->ensureAuth();
+
+        $companyModel = new CompanyModel();
+        $companyModel->syncClassifiedCompanies();
 
         $success = $_GET['success'] ?? null;
         $error = $_GET['error'] ?? null;
@@ -235,33 +309,47 @@ class DashboardController
                 if ($companyDir === '.' || $companyDir === '..') continue;
 
                 $companyPath = $baseDir . '/' . $companyDir;
-                if (is_dir($companyPath)) {
-                    $companies[$companyDir] = [
-                        'folders' => []
+                if (!is_dir($companyPath)) {
+                    continue;
+                }
+
+                $displayName = $this->normalizeClassifiedCompanyName($companyDir);
+                if ($displayName === '') {
+                    $displayName = $companyDir;
+                }
+
+                if (!isset($companies[$displayName])) {
+                    $companies[$displayName] = [
+                        'display_name' => $displayName,
+                        'company_dirs' => []
                     ];
+                }
 
-                    $subDirs = scandir($companyPath);
-                    foreach ($subDirs as $subDir) {
-                        if ($subDir === '.' || $subDir === '..') continue;
+                $companies[$displayName]['company_dirs'][$companyDir] = [
+                    'folders' => []
+                ];
 
-                        $subPath = $companyPath . '/' . $subDir;
-                        if (is_dir($subPath)) {
-                            $companies[$companyDir]['folders'][$subDir] = [
-                                'files' => []
-                            ];
+                $subDirs = scandir($companyPath);
+                foreach ($subDirs as $subDir) {
+                    if ($subDir === '.' || $subDir === '..') continue;
 
-                            $files = scandir($subPath);
-                            foreach ($files as $file) {
-                                if ($file === '.' || $file === '..') continue;
+                    $subPath = $companyPath . '/' . $subDir;
+                    if (is_dir($subPath)) {
+                        $companies[$displayName]['company_dirs'][$companyDir]['folders'][$subDir] = [
+                            'files' => []
+                        ];
 
-                                $filePath = $subPath . '/' . $file;
-                                if (is_file($filePath)) {
-                                    $companies[$companyDir]['folders'][$subDir]['files'][] = [
-                                        'name' => $file,
-                                        'size' => filesize($filePath),
-                                        'modified' => date('d/m/Y H:i', filemtime($filePath))
-                                    ];
-                                }
+                        $files = scandir($subPath);
+                        foreach ($files as $file) {
+                            if ($file === '.' || $file === '..') continue;
+
+                            $filePath = $subPath . '/' . $file;
+                            if (is_file($filePath)) {
+                                $companies[$displayName]['company_dirs'][$companyDir]['folders'][$subDir]['files'][] = [
+                                    'name' => $file,
+                                    'size' => filesize($filePath),
+                                    'modified' => date('d/m/Y H:i', filemtime($filePath))
+                                ];
                             }
                         }
                     }
@@ -270,6 +358,12 @@ class DashboardController
         }
 
         include __DIR__ . '/../views/dashboard/files.php';
+    }
+
+    private function normalizeClassifiedCompanyName(string $companyName)
+    {
+        $clean = preg_replace('/^LISTADO[ _-]*/iu', '', $companyName);
+        return trim($clean);
     }
 
     public function download()

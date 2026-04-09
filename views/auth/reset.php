@@ -70,25 +70,22 @@
 </div>
 
 <script>
-    const togglePassword = document.getElementById('toggle-password');
-    const passwordField = document.getElementById('password-field');
-    if (togglePassword && passwordField) {
-        togglePassword.addEventListener('click', function () {
-            const isPassword = passwordField.type === 'password';
-            passwordField.type = isPassword ? 'text' : 'password';
-            this.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
+    document.querySelectorAll('.password-toggle').forEach(function(button) {
+        button.addEventListener('click', function(event) {
+            event.preventDefault();
+            const wrapper = button.closest('.password-wrapper');
+            if (!wrapper) {
+                return;
+            }
+            const input = wrapper.querySelector('input[type="password"], input[type="text"]');
+            if (!input) {
+                return;
+            }
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            button.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
         });
-    }
-
-    const toggleConfirm = document.getElementById('toggle-confirm');
-    const confirmField = document.getElementById('confirm-field');
-    if (toggleConfirm && confirmField) {
-        toggleConfirm.addEventListener('click', function () {
-            const isPassword = confirmField.type === 'password';
-            confirmField.type = isPassword ? 'text' : 'password';
-            this.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
-        });
-    }
+    });
 </script>
 
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

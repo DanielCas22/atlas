@@ -28,22 +28,13 @@
 
                     <div class="input-group password">
                         <span class="input-icon"><i class="bi bi-lock"></i></span>
-                        <div class="password-wrapper" style="width: 100%;">
-                            <input type="password" id="password-field" name="password"
-                                   class="form-control"
-                                   placeholder="Contraseña" required autocomplete="current-password"
-                                   style="width: 100%; margin-bottom: 1rem; padding-left: 2.6rem;">
-                            <button type="button" class="password-toggle" id="toggle-password" aria-label="Mostrar contraseña">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                        </div>
+                        <input type="password" id="password-field" name="password"
+                               class="form-control"
+                               placeholder="Contraseña" required autocomplete="current-password"
+                               style="width: 100%; margin-bottom: 1rem; padding-left: 2.6rem;">
                     </div>
 
                     <div class="login-extras">
-                        <label class="form-check-label" style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
-                            <input type="checkbox" class="form-check-input" id="remember" name="remember" style="width: auto; margin: 0;">
-                            Recordarme
-                        </label>
                         <a href="index.php?c=auth&a=forgot" class="forgot">¿Olvidaste tu contraseña?</a>
                     </div>
 
@@ -53,7 +44,12 @@
                 </form>
 
                 <p class="signup">
-                    ¿No tienes cuenta? <strong>Contacta al administrador</strong>
+                    ¿No tienes cuenta? 
+                    <?php if (!empty($adminEmail)): ?>
+                        <a href="mailto:<?= htmlspecialchars($adminEmail) ?>" style="color: #fff; text-decoration: underline;">Contacta al administrador</a>
+                    <?php else: ?>
+                        <strong>Contacta al administrador</strong>
+                    <?php endif; ?>
                 </p>
             </div>
 
@@ -66,17 +62,5 @@
         </div>
     </div>
 </div>
-
-<script>
-    const togglePassword = document.getElementById('toggle-password');
-    const passwordField = document.getElementById('password-field');
-    if (togglePassword && passwordField) {
-        togglePassword.addEventListener('click', function () {
-            const isPassword = passwordField.type === 'password';
-            passwordField.type = isPassword ? 'text' : 'password';
-            this.innerHTML = isPassword ? '<i class="bi bi-eye-slash"></i>' : '<i class="bi bi-eye"></i>';
-        });
-    }
-</script>
 
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

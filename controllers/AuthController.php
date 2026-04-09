@@ -35,6 +35,7 @@ class AuthController
             $error = 'Usuario o contraseña inválido';
         }
 
+        $adminEmail = $this->userModel->findAdminEmail();
         include __DIR__ . '/../views/auth/login.php';
     }
 
@@ -91,9 +92,14 @@ class AuthController
                         $success = 'Se ha enviado un enlace de recuperación a tu email.';
                         $sentByEmail = true;
                     } else {
-                        // Modo desarrollo - mostrar token en pantalla
-                        $success = 'Token generado (SMTP no configurado). Token de prueba: ' . htmlspecialchars($token);
-                        $sentByEmail = false;
+                        if ($user) {
+                            error_log('Fallo al enviar email de recuperación a: ' . $email);
+                            $error = 'No se pudo enviar el correo de recuperación. Revisa la configuración SMTP y prueba nuevamente.';
+                        } else {
+                            // Por seguridad, no revelar si el email existe
+                            $success = 'Si ese email está registrado, recibirás un enlace de recuperación.';
+                            $sentByEmail = true;
+                        }
                     }
                 } else {
                     // Por seguridad, no revelar si el email existe

@@ -71,6 +71,14 @@ class UserModel extends BaseModel
         return $stmt->fetch();
     }
 
+    public function findAdminEmail()
+    {
+        $stmt = $this->db->prepare('SELECT u.email FROM users u JOIN roles r ON u.role_id = r.id WHERE LOWER(r.name) = ? LIMIT 1');
+        $stmt->execute(['admin']);
+        $result = $stmt->fetch();
+        return $result['email'] ?? null;
+    }
+
     public function savePasswordReset(int $userId, string $token, int $expiresInMinutes = 30)
     {
         $expiresAt = date('Y-m-d H:i:s', time() + ($expiresInMinutes * 60));

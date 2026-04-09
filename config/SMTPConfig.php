@@ -5,59 +5,72 @@
  * 
  * Opciones de SMTP:
  * 
- * 1. GMAIL (recomendado para pruebas):
- *    - Host: smtp.gmail.com
- *    - Port: 587 (TLS) o 465 (SSL)
- *    - Username: tu_email@gmail.com
- *    - Password: contraseña de app (generar en Google Account)
- *    
- * 2. SERVIDOR LOCAL (XAMPP):
- *    - Host: localhost
- *    - Port: 25
- *    - Username: dejar vacío
- *    - Password: dejar vacío
- *    
- * 3. SENDGRID:
- *    - Host: smtp.sendgrid.net
- *    - Port: 587
- *    - Username: apikey
- *    - Password: tu_api_key
+ * DESARROLLO LOCAL (localhost):
+ *    - Usa Mailtrap automáticamente
+ *
+ * PRODUCCIÓN (dominio real):
+ *    - Usa Gmail (necesitas contraseña de app)
+ *    - O SendGrid (más confiable)
+ *
+ * Para Gmail en producción:
+ * 1. Ve a: https://myaccount.google.com/security
+ * 2. Habilita "Verificación en dos pasos"
+ * 3. Ve a "Contraseñas de aplicación"
+ * 4. Genera una contraseña para "Atlas Seguridad"
+ * 5. Pon esa contraseña en GMAIL_APP_PASSWORD
  */
 
 class SMTPConfig
 {
     // Cambiar a true para habilitar envío de emails
-    const ENABLED = false;
+    const ENABLED = true;
 
-    // Tipo de SMTP: 'gmail', 'local', 'sendgrid', 'custom'
-    const PROVIDER = 'gmail';
+    // Cambia a 'mailtrap', 'gmail' o 'sendgrid'
+    // Usa 'sendgrid' si quieres enviar correos reales desde el hosting
+    const PROVIDER = 'sendgrid';
 
-    // ==================== GMAIL ====================
+    // URL base de la aplicación, úsala cuando la app esté en un subdirectorio de htdocs
+    const BASE_URL = 'http://localhost/atlas';
+
+    // ==================== DETECCIÓN AUTOMÁTICA DE ENTORNO ====================
+    public static function isLocalhost()
+    {
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        return strpos($host, 'localhost') !== false ||
+               strpos($host, '127.0.0.1') !== false ||
+               strpos($host, '.local') !== false;
+    }
+
+    // Función para obtener el proveedor según entorno
+    public static function getProvider()
+    {
+        if (self::PROVIDER !== 'auto') {
+            return self::PROVIDER;
+        }
+
+        return self::isLocalhost() ? 'mailtrap' : 'gmail';
+    }
+
+    // ==================== MAILTRAP (DESARROLLO LOCAL) ====================
+    const MAILTRAP_HOST = 'sandbox.smtp.mailtrap.io';
+    const MAILTRAP_PORT = 2525;
+    const MAILTRAP_USERNAME = '9e4a7d09490fa1';
+    const MAILTRAP_PASSWORD = 'da1a5e31e4e34a';
+
+    // ==================== GMAIL (PRODUCCIÓN) ====================
     const GMAIL_HOST = 'smtp.gmail.com';
     const GMAIL_PORT = 587;  // 587 para TLS, 465 para SSL
-    const GMAIL_USERNAME = 'tu_email@gmail.com';  // ✏️ CAMBIAR
-    const GMAIL_PASSWORD = 'tu_app_password';      // ✏️ CAMBIAR (Generar desde Google Account)
+    const GMAIL_USERNAME = 'tu_email@gmail.com';  // ✏️ CAMBIAR: pon tu email de Gmail
+    const GMAIL_APP_PASSWORD = 'tu_app_password_aqui';      // ✏️ CAMBIAR: genera contraseña de app
 
-    // ==================== SERVIDOR LOCAL ====================
-    const LOCAL_HOST = 'localhost';
-    const LOCAL_PORT = 25;
-    const LOCAL_USERNAME = '';
-    const LOCAL_PASSWORD = '';
-
-    // ==================== SENDGRID ====================
+    // ==================== SENDGRID (ALTERNATIVA PRODUCCIÓN) ====================
     const SENDGRID_HOST = 'smtp.sendgrid.net';
     const SENDGRID_PORT = 587;
     const SENDGRID_USERNAME = 'apikey';
-    const SENDGRID_PASSWORD = 'tu_sendgrid_api_key';  // ✏️ CAMBIAR
-
-    // ==================== CUSTOM ====================
-    const CUSTOM_HOST = 'mail.tudominio.com';
-    const CUSTOM_PORT = 587;
-    const CUSTOM_USERNAME = 'tu_usuario';            // ✏️ CAMBIAR
-    const CUSTOM_PASSWORD = 'tu_password';           // ✏️ CAMBIAR
+    const SENDGRID_API_KEY = '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';  // ✏️ CAMBIAR: pon aquí tu API Key de SendGrid
 
     // Remitente predeterminado
-    const FROM_ADDRESS = 'noreply@atlasseguridad.com';
+    const FROM_ADDRESS = 'danielcaes07@gmail.com';
     const FROM_NAME = 'Atlas Seguridad';
 
     /**
@@ -70,37 +83,30 @@ class SMTPConfig
         }
 
         $configs = [
+            'mailtrap' => [
+                'host' => self::MAILTRAP_HOST,
+                'port' => self::MAILTRAP_PORT,
+                'username' => self::MAILTRAP_USERNAME,
+                'password' => self::MAILTRAP_PASSWORD,
+                'secure' => 'tls',
+            ],
             'gmail' => [
                 'host' => self::GMAIL_HOST,
                 'port' => self::GMAIL_PORT,
                 'username' => self::GMAIL_USERNAME,
-                'password' => self::GMAIL_PASSWORD,
-                'secure' => 'tls',  // 'tls' o 'ssl'
-            ],
-            'local' => [
-                'host' => self::LOCAL_HOST,
-                'port' => self::LOCAL_PORT,
-                'username' => self::LOCAL_USERNAME,
-                'password' => self::LOCAL_PASSWORD,
-                'secure' => '',
+                'password' => self::GMAIL_APP_PASSWORD,
+                'secure' => 'tls',
             ],
             'sendgrid' => [
                 'host' => self::SENDGRID_HOST,
                 'port' => self::SENDGRID_PORT,
                 'username' => self::SENDGRID_USERNAME,
-                'password' => self::SENDGRID_PASSWORD,
-                'secure' => 'tls',
-            ],
-            'custom' => [
-                'host' => self::CUSTOM_HOST,
-                'port' => self::CUSTOM_PORT,
-                'username' => self::CUSTOM_USERNAME,
-                'password' => self::CUSTOM_PASSWORD,
+                'password' => self::SENDGRID_API_KEY,
                 'secure' => 'tls',
             ],
         ];
 
-        return $configs[self::PROVIDER] ?? null;
+        return $configs[self::getProvider()] ?? null;
     }
 
     /**

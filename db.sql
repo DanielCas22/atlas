@@ -23,11 +23,16 @@ CREATE TABLE IF NOT EXISTS users (
   role_id INT NOT NULL,
   username VARCHAR(80) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
+  reset_token VARCHAR(255) NULL DEFAULT NULL,
+  reset_token_expires DATETIME NULL DEFAULT NULL,
   fullname VARCHAR(120) NOT NULL,
   email VARCHAR(120) DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE=InnoDB;
+
+-- Índice para búsquedas rápidas de tokens de reset
+CREATE INDEX idx_reset_token ON users(reset_token);
 
 -- Tipo de examen
 CREATE TABLE IF NOT EXISTS exam_types (

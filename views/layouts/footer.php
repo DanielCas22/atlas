@@ -13,6 +13,14 @@
                     <small class="text-muted">© 2026 - Versión 1.0</small>
                 </div>
             </div>
+            <div class="row mt-2">
+                <div class="col-12">
+                    <small class="text-muted d-block">Creado por Daniel Bernal Castellanos</small>
+                    <small class="text-muted d-block">Contacto: +57 321 955 8545</small>
+                    <small class="text-muted d-block">Correo: angeldb20052@gmail.com</small>
+                    <small class="text-muted d-block">Certificado e implementado</small>
+                </div>
+            </div>
         </div>
     </footer>
 

@@ -18,6 +18,87 @@ class CompanyModel extends BaseModel
         return $this->db->query($sql)->fetchAll();
     }
 
+    public function normalizeCompanyName(string $name)
+    {
+        $clean = preg_replace('/^LISTADO[ _-]*/iu', '', $name);
+        return trim($clean);
+    }
+
+    public function sanitizeCompanyFolderName(string $name)
+    {
+        $folder = trim($name);
+        $folder = preg_replace('/[\\\/]+/', '_', $folder);
+        $folder = preg_replace('/\s+/', ' ', $folder);
+        $folder = trim($folder);
+        return $folder;
+    }
+
+    public function syncClassifiedCompanies()
+    {
+        $baseDir = __DIR__ . '/../empresas_clasificadas';
+        $summary = ['added' => 0, 'existing' => 0, 'failed' => 0, 'folders_created' => 0];
+
+        if (!is_dir($baseDir)) {
+            return $summary;
+        }
+
+        $classifiedFolders = [];
+        foreach (scandir($baseDir) as $companyDir) {
+            if ($companyDir === '.' || $companyDir === '..') {
+                continue;
+            }
+
+            $companyPath = $baseDir . '/' . $companyDir;
+            if (!is_dir($companyPath)) {
+                continue;
+            }
+
+            $companyName = $this->normalizeCompanyName($companyDir);
+            if ($companyName === '') {
+                continue;
+            }
+
+            $classifiedFolders[$companyName] = $companyDir;
+        }
+
+        foreach ($classifiedFolders as $companyName => $companyDir) {
+            try {
+                if ($this->findByName($companyName)) {
+                    $summary['existing']++;
+                } else {
+                    $this->add($companyName);
+                    $summary['added']++;
+                }
+            } catch (Exception $e) {
+                error_log('Error sincronizando empresa desde archivos clasificados: ' . $e->getMessage());
+                $summary['failed']++;
+            }
+        }
+
+        $dbCompanies = $this->all();
+        foreach ($dbCompanies as $company) {
+            $companyName = trim($company['name']);
+            if ($companyName === '') {
+                continue;
+            }
+
+            if (isset($classifiedFolders[$companyName])) {
+                continue;
+            }
+
+            $folderName = $this->sanitizeCompanyFolderName($companyName);
+            $folderPath = $baseDir . '/' . $folderName;
+
+            if (!is_dir($folderPath)) {
+                if (@mkdir($folderPath, 0777, true)) {
+                    $summary['folders_created']++;
+                }
+            }
+        }
+
+        return $summary;
+    }
+
     public function searchByName($searchTerm)
     {
         $sql = 'SELECT sc.id, sc.name, COUNT(e.id) as exam_count

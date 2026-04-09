@@ -39,6 +39,14 @@
                         </div>
                     <?php endif; ?>
 
+                    <?php if (isset($syncSummary)): ?>
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            <i class="bi bi-arrow-repeat me-2"></i>
+                            Empresas sincronizadas: <?php echo intval($syncSummary['added']); ?> añadidas, <?php echo intval($syncSummary['existing']); ?> ya existentes<?php echo !empty($syncSummary['failed']) ? ', ' . intval($syncSummary['failed']) . ' con error' : ''; ?>.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <?php endif; ?>
+
                     <form method="POST" enctype="multipart/form-data">
                         <div class="mb-4">
                             <label for="excelFile" class="form-label fw-semibold">
@@ -117,14 +125,20 @@
                             </button>
                         </div>
 
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-cloud-upload me-2"></i>Procesar Archivo
-                            </button>
-                            <a href="index.php?c=dashboard&a=index" class="btn btn-outline-secondary btn-lg">
-                                <i class="bi bi-arrow-left me-2"></i>Volver al Dashboard
-                            </a>
-                        </div>
+                        <div class="d-flex gap-2 flex-wrap">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-cloud-upload me-2"></i>Procesar Archivo
+                        </button>
+                        <a href="index.php?c=dashboard&a=index" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-arrow-left me-2"></i>Volver al Dashboard
+                        </a>
+                    </div>
+                    </form>
+
+                    <form method="post" action="index.php?c=dashboard&a=syncClassifiedCompanies" class="mt-3">
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-arrow-repeat me-2"></i>Sincronizar empresas clasificadas a "Empresas"
+                        </button>
                     </form>
 
                     <script>

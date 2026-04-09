@@ -1,7 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/SMTPConfig.php';
+require_once __DIR__ . '/../config/SMTPConfig.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -10,13 +9,20 @@ class EmailHelper
 {
     private $mailer;
     private $config;
+    private $mailerAvailable = false;
 
     public function __construct()
     {
-        $this->mailer = new PHPMailer(true);
         $this->config = SMTPConfig::getConfig();
 
-        if ($this->config && SMTPConfig::isConfigured()) {
+        $autoloadPath = __DIR__ . '/../vendor/autoload.php';
+        if (file_exists($autoloadPath)) {
+            require_once $autoloadPath;
+            $this->mailerAvailable = class_exists('PHPMailer\\PHPMailer\\PHPMailer');
+        }
+
+        if ($this->mailerAvailable && $this->config && SMTPConfig::isConfigured()) {
+            $this->mailer = new PHPMailer(true);
             $this->configureMailer();
         }
     }
@@ -30,10 +36,15 @@ class EmailHelper
             $this->mailer->isSMTP();
             $this->mailer->Host = $this->config['host'];
             $this->mailer->Port = $this->config['port'];
-            $this->mailer->SMTPAuth = true;
-            $this->mailer->Username = $this->config['username'];
-            $this->mailer->Password = $this->config['password'];
-            
+            $this->mailer->SMTPAuth = !empty($this->config['username']) && !empty($this->config['password']);
+
+            if (!empty($this->config['username'])) {
+                $this->mailer->Username = $this->config['username'];
+            }
+            if (!empty($this->config['password'])) {
+                $this->mailer->Password = $this->config['password'];
+            }
+
             if (!empty($this->config['secure'])) {
                 $this->mailer->SMTPSecure = $this->config['secure'];
             }
@@ -53,25 +64,42 @@ class EmailHelper
             return false;
         }
 
-        try {
-            $resetLink = 'http://' . $_SERVER['HTTP_HOST'] . '/atlas/index.php?c=auth&a=reset&token=' . urlencode($resetToken);
-
-            $this->mailer->addAddress($userEmail);
-            $this->mailer->Subject = 'Recuperar contraseña - Atlas Seguridad';
-            $this->mailer->isHTML(true);
-            $this->mailer->Body = $this->getPasswordResetEmailTemplate($username, $resetLink);
-            $this->mailer->AltBody = $this->getPasswordResetPlainText($username, $resetLink);
-
-            $result = $this->mailer->send();
-
-            // Limpiar destinatarios para próximo correo
-            $this->mailer->clearAddresses();
-
-            return $result;
-        } catch (Exception $e) {
-            error_log("Error enviando email: " . $e->getMessage());
-            return false;
+        if (!empty(SMTPConfig::BASE_URL)) {
+            $resetLink = rtrim(SMTPConfig::BASE_URL, '/') . '/index.php?c=auth&a=reset&token=' . urlencode($resetToken);
+        } else {
+            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $baseUrl = rtrim(dirname($_SERVER['PHP_SELF'] ?? '/'), '/\\');
+            $resetLink = $protocol . '://' . $host . $baseUrl . '/index.php?c=auth&a=reset&token=' . urlencode($resetToken);
         }
+
+        if ($this->mailerAvailable && $this->mailer) {
+            try {
+                $this->mailer->addAddress($userEmail);
+                $this->mailer->Subject = 'Recuperar contraseña - Atlas Seguridad';
+                $this->mailer->isHTML(true);
+                $this->mailer->Body = $this->getPasswordResetEmailTemplate($username, $resetLink);
+                $this->mailer->AltBody = $this->getPasswordResetPlainText($username, $resetLink);
+
+                $result = $this->mailer->send();
+
+                // Limpiar destinatarios para próximo correo
+                $this->mailer->clearAddresses();
+                $this->mailer->smtpClose();
+
+                return $result;
+            } catch (Exception $e) {
+                error_log("Error enviando email: " . $e->getMessage());
+                return false;
+            }
+        }
+
+        // Fallback: usar mail() si PHPMailer no está disponible
+        $headers = "MIME-Version: 1.0\r\n";
+        $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+        $headers .= 'From: ' . SMTPConfig::FROM_NAME . ' <' . SMTPConfig::FROM_ADDRESS . '>\r\n';
+
+        return mail($userEmail, 'Recuperar contraseña - Atlas Seguridad', $this->getPasswordResetEmailTemplate($username, $resetLink), $headers);
     }
 
     /**
@@ -161,15 +189,21 @@ TEXT;
             $mailer->isSMTP();
             $mailer->Host = $config['host'];
             $mailer->Port = $config['port'];
-            $mailer->SMTPAuth = true;
-            $mailer->Username = $config['username'];
-            $mailer->Password = $config['password'];
+            $mailer->SMTPAuth = !empty($config['username']) && !empty($config['password']);
+
+            if (!empty($config['username'])) {
+                $mailer->Username = $config['username'];
+            }
+            if (!empty($config['password'])) {
+                $mailer->Password = $config['password'];
+            }
             
             if (!empty($config['secure'])) {
                 $mailer->SMTPSecure = $config['secure'];
             }
 
             $mailer->smtpConnect();
+            $mailer->smtpClose();
             return ['success' => true, 'message' => 'Conexión SMTP exitosa'];
         } catch (Exception $e) {
             return ['success' => false, 'message' => 'Error de conexión: ' . $e->getMessage()];
