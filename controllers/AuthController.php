@@ -39,6 +39,16 @@ class AuthController
         include __DIR__ . '/../views/auth/login.php';
     }
 
+    public function support()
+    {
+        if (!empty($_SESSION['user'])) {
+            header('Location: index.php?c=dashboard&a=index');
+            exit;
+        }
+
+        include __DIR__ . '/../views/auth/support.php';
+    }
+
     public function logout()
     {
         // Limpiar datos de sesión y cookies

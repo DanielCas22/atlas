@@ -26,7 +26,7 @@ class SMTPConfig
     const ENABLED = true;
 
     // Cambia a 'mailtrap', 'gmail' o 'sendgrid'
-    // Usa 'sendgrid' si quieres enviar correos reales desde el hosting
+    // Usa 'sendgrid' para enviar correos reales desde un proveedor SMTP externo
     const PROVIDER = 'sendgrid';
 
     // URL base de la aplicación, úsala cuando la app esté en un subdirectorio de htdocs
@@ -67,7 +67,7 @@ class SMTPConfig
     const SENDGRID_HOST = 'smtp.sendgrid.net';
     const SENDGRID_PORT = 587;
     const SENDGRID_USERNAME = 'apikey';
-    const SENDGRID_API_KEY = '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';  // ✏️ CAMBIAR: pon aquí tu API Key de SendGrid
+    const SENDGRID_API_KEY = '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';  // ✏️ Cambiado a tu API Key de SendGrid
 
     // Remitente predeterminado
     const FROM_ADDRESS = 'danielcaes07@gmail.com';

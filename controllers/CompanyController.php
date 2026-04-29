@@ -98,6 +98,49 @@ class CompanyController
         exit;
     }
 
+    /**
+     * Eliminar múltiples empresas seleccionadas
+     */
+    public function deleteMultiple()
+    {
+        $this->ensureAuth();
+
+        $ids = $_POST['company_ids'] ?? $_GET['ids'] ?? [];
+        
+        // Convertir a array si viene como string
+        if (is_string($ids)) {
+            $ids = explode(',', $ids);
+        }
+
+        // Filtrar y convertir a enteros
+        $ids = array_filter($ids, function($id) {
+            return is_numeric($id) && intval($id) > 0;
+        });
+        $ids = array_map('intval', $ids);
+
+        if (empty($ids)) {
+            header('Location: index.php?c=company&a=list&error=' . urlencode('No se seleccionaron empresas para eliminar.'));
+            exit;
+        }
+
+        try {
+            $result = $this->companyModel->deleteMultiple($ids);
+            if ($result['success']) {
+                $count = $result['deleted_count'];
+                $message = $count === 1 
+                    ? 'Empresa eliminada correctamente.' 
+                    : "$count empresas eliminadas correctamente.";
+                header('Location: index.php?c=company&a=list&message=' . urlencode($message));
+            } else {
+                header('Location: index.php?c=company&a=list&error=' . urlencode('Error al eliminar empresas: ' . ($result['error'] ?? 'Error desconocido.')));
+            }
+        } catch (Exception $e) {
+            header('Location: index.php?c=company&a=list&error=' . urlencode('Error al eliminar empresas: ' . $e->getMessage()));
+        }
+
+        exit;
+    }
+
     public function view()
     {
         $this->ensureAuth();

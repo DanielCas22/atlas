@@ -96,10 +96,27 @@
                     </div>
                 </div>
                 <div class="card-body p-0">
+                    <!-- Toolbar de acciones masivas -->
+                    <div class="bg-light border-0 py-2 px-3 d-flex justify-content-between align-items-center">
+                        <div class="text-muted small">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <span id="selectedCount">0</span> empresa(s) seleccionada(s)
+                        </div>
+                        <form id="deleteMultipleForm" method="POST" action="index.php?c=company&a=deleteMultiple" style="display: inline;">
+                            <button type="button" id="deleteSelectedBtn" class="btn btn-danger btn-sm" disabled>
+                                <i class="bi bi-trash me-1"></i>Eliminar Seleccionadas
+                            </button>
+                        </form>
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
+                                    <th class="border-0 fw-semibold" style="width: 50px;">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="selectAllCheckbox">
+                                        </div>
+                                    </th>
                                     <th class="border-0 fw-semibold">
                                         <i class="bi bi-building me-1"></i>Nombre de Empresa
                                     </th>
@@ -114,6 +131,12 @@
                             <tbody>
                                 <?php foreach ($companies as $company): ?>
                                     <tr>
+                                        <td>
+                                            <div class="form-check">
+                                                <input class="form-check-input company-checkbox" type="checkbox" 
+                                                       name="company_ids[]" value="<?= $company['id'] ?>">
+                                            </div>
+                                        </td>
                                         <td class="fw-semibold">
                                             <div class="d-flex align-items-center">
                                                 <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
@@ -195,5 +218,87 @@
     </div>
     <?php endif; ?>
 </div>
+
+<!-- JavaScript para selección múltiple -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const companyCheckboxes = document.querySelectorAll('.company-checkbox');
+    const selectedCountEl = document.getElementById('selectedCount');
+    const deleteSelectedBtn = document.getElementById('deleteSelectedBtn');
+    const deleteMultipleForm = document.getElementById('deleteMultipleForm');
+
+    // Función para actualizar el contador y estado del botón
+    function updateSelectionState() {
+        const checkedBoxes = document.querySelectorAll('.company-checkbox:checked');
+        const count = checkedBoxes.length;
+        selectedCountEl.textContent = count;
+        deleteSelectedBtn.disabled = count === 0;
+        
+        // Cambiar texto del botón según cantidad
+        if (count === 1) {
+            deleteSelectedBtn.innerHTML = '<i class="bi bi-trash me-1"></i>Eliminar Seleccionada';
+        } else if (count > 1) {
+            deleteSelectedBtn.innerHTML = '<i class="bi bi-trash me-1"></i>Eliminar Seleccionadas';
+        }
+    }
+
+    // Seleccionar/deseleccionar todos
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            companyCheckboxes.forEach(checkbox => {
+                checkbox.checked = selectAllCheckbox.checked;
+            });
+            updateSelectionState();
+        });
+    }
+
+    // Manejar cambio en checkboxes individuales
+    companyCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            // Verificar si todos están marcados
+            const allChecked = Array.from(companyCheckboxes).every(cb => cb.checked);
+            const someChecked = Array.from(companyCheckboxes).some(cb => cb.checked);
+            
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = allChecked;
+                selectAllCheckbox.indeterminate = someChecked && !allChecked;
+            }
+            
+            updateSelectionState();
+        });
+    });
+
+    // Manejar clic en botón eliminar
+    if (deleteSelectedBtn) {
+        deleteSelectedBtn.addEventListener('click', function() {
+            const checkedBoxes = document.querySelectorAll('.company-checkbox:checked');
+            const count = checkedBoxes.length;
+            
+            if (count === 0) {
+                return;
+            }
+
+            const confirmMessage = count === 1 
+                ? '¿Está seguro de eliminar esta empresa?' 
+                : '¿Está seguro de eliminar estas ' + count + ' empresas?';
+            
+            if (confirm(confirmMessage)) {
+                // Crear inputs ocultos con los IDs seleccionados
+                checkedBoxes.forEach(checkbox => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'company_ids[]';
+                    input.value = checkbox.value;
+                    deleteMultipleForm.appendChild(input);
+                });
+                
+                // Enviar el formulario
+                deleteMultipleForm.submit();
+            }
+        });
+    }
+});
+</script>
 
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

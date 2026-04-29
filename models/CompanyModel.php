@@ -5,7 +5,11 @@ class CompanyModel extends BaseModel
     public function all()
     {
         $stmt = $this->db->query('SELECT id, name, contact FROM security_companies ORDER BY name');
-        return $stmt->fetchAll();
+        $companies = $stmt->fetchAll();
+        foreach ($companies as &$company) {
+            $company['name'] = $this->normalizeCompanyName($company['name']);
+        }
+        return $companies;
     }
 
     public function allWithExamCounts()
@@ -15,12 +19,18 @@ class CompanyModel extends BaseModel
                 LEFT JOIN exams e ON sc.id = e.company_id
                 GROUP BY sc.id, sc.name
                 ORDER BY sc.name';
-        return $this->db->query($sql)->fetchAll();
+        $companies = $this->db->query($sql)->fetchAll();
+        foreach ($companies as &$company) {
+            $company['name'] = $this->normalizeCompanyName($company['name']);
+        }
+        return $companies;
     }
 
     public function normalizeCompanyName(string $name)
     {
         $clean = preg_replace('/^LISTADO[ _-]*/iu', '', $name);
+        $clean = str_replace('_', ' ', $clean);
+        $clean = str_replace('COMPA IA', 'COMPAÑIA', $clean);
         return trim($clean);
     }
 
@@ -160,6 +170,10 @@ class CompanyModel extends BaseModel
             return false;
         }
 
+        // Obtener info de la empresa antes de eliminar
+        $company = $this->find($id);
+        $companyName = $company ? $company['name'] : null;
+
         if (!class_exists('ExamModel')) {
             require_once __DIR__ . '/ExamModel.php';
         }
@@ -168,6 +182,136 @@ class CompanyModel extends BaseModel
         $examModel->deleteByCompanyId($id);
 
         $stmt = $this->db->prepare('DELETE FROM security_companies WHERE id = ?');
-        return $stmt->execute([$id]);
+        $result = $stmt->execute([$id]);
+
+        // Si se eliminó correctamente, eliminar también la carpeta en empresas_clasificadas
+        if ($result && $companyName) {
+            $this->deleteCompanyFolder($companyName);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Eliminar la carpeta de una empresa en empresas_clasificadas
+     */
+    private function deleteCompanyFolder($companyName)
+    {
+        $baseDir = __DIR__ . '/../empresas_clasificadas';
+        
+        if (!is_dir($baseDir)) {
+            return false;
+        }
+
+        // Buscar carpeta que coincida con el nombre normalizado
+        $normalizedName = $this->normalizeCompanyName($companyName);
+        
+        $folders = scandir($baseDir);
+        foreach ($folders as $folder) {
+            if ($folder === '.' || $folder === '..') {
+                continue;
+            }
+            
+            $folderPath = $baseDir . '/' . $folder;
+            if (!is_dir($folderPath)) {
+                continue;
+            }
+
+            // Comparar nombres normalizados
+            if ($this->normalizeCompanyName($folder) === $normalizedName) {
+                // Eliminar carpeta y su contenido
+                $this->deleteDirectory($folderPath);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Eliminar directorio y todo su contenido
+     */
+    private function deleteDirectory($dir)
+    {
+        if (!is_dir($dir)) {
+            return false;
+        }
+
+        $items = scandir($dir);
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+
+            $path = $dir . '/' . $item;
+            if (is_dir($path)) {
+                $this->deleteDirectory($path);
+            } else {
+                @unlink($path);
+            }
+        }
+
+        return @rmdir($dir);
+    }
+
+    /**
+     * Eliminar múltiples empresas por sus IDs
+     * @param array $ids Array de IDs de empresas a eliminar
+     * @return array Resultado con 'success' y 'deleted_count'
+     */
+    public function deleteMultiple(array $ids)
+    {
+        if (empty($ids)) {
+            return ['success' => false, 'deleted_count' => 0, 'error' => 'No se proporcionaron empresas a eliminar'];
+        }
+
+        // Validar que todos los IDs sean números enteros
+        $ids = array_filter($ids, function($id) {
+            return is_numeric($id) && intval($id) > 0;
+        });
+        $ids = array_map('intval', $ids);
+
+        if (empty($ids)) {
+            return ['success' => false, 'deleted_count' => 0, 'error' => 'IDs de empresas inválidos'];
+        }
+
+        $deletedCount = 0;
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+        try {
+            // Obtener info de las empresas antes de eliminar
+            $companiesToDelete = [];
+            foreach ($ids as $id) {
+                $company = $this->find($id);
+                if ($company) {
+                    $companiesToDelete[] = $company['name'];
+                }
+            }
+
+            // Primero eliminar todos los exámenes asociados a estas empresas
+            if (!class_exists('ExamModel')) {
+                require_once __DIR__ . '/ExamModel.php';
+            }
+            $examModel = new ExamModel();
+            
+            foreach ($ids as $id) {
+                $examModel->deleteByCompanyId($id);
+            }
+
+            // Eliminar las empresas
+            $sql = "DELETE FROM security_companies WHERE id IN ($placeholders)";
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute($ids);
+            $deletedCount = $stmt->rowCount();
+
+            // Eliminar las carpetas correspondientes
+            foreach ($companiesToDelete as $companyName) {
+                $this->deleteCompanyFolder($companyName);
+            }
+
+            return ['success' => true, 'deleted_count' => $deletedCount, 'error' => null];
+        } catch (Exception $e) {
+            return ['success' => false, 'deleted_count' => $deletedCount, 'error' => $e->getMessage()];
+        }
     }
 }

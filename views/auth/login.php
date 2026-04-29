@@ -43,13 +43,8 @@
                     </button>
                 </form>
 
-                <p class="signup">
-                    ¿No tienes cuenta? 
-                    <?php if (!empty($adminEmail)): ?>
-                        <a href="mailto:<?= htmlspecialchars($adminEmail) ?>" style="color: #fff; text-decoration: underline;">Contacta al administrador</a>
-                    <?php else: ?>
-                        <strong>Contacta al administrador</strong>
-                    <?php endif; ?>
+                <p class="signup" style="margin-top: 1.5rem;">
+                    ¿Necesitas ayuda? <a href="index.php?c=auth&a=support" style="color: #fff; text-decoration: underline;">Contacta con soporte</a>
                 </p>
             </div>
 
