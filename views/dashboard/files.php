@@ -12,7 +12,7 @@
                     <i class="bi bi-arrow-left me-2"></i>Volver al Dashboard
                 </a>
             </div>
-            <p class="text-muted mt-2">Explora los archivos generados por empresa</p>
+            <p class="text-white-50 mt-2">Explora los archivos generados por empresa</p>
         </div>
     </div>
 
@@ -37,10 +37,20 @@
             </div>
         </div>
         <div class="col-md-6 text-end">
-            <button type="button" id="selectAllBtn" class="btn btn-outline-primary me-2">
+            <form method="post" action="index.php?c=dashboard&a=cleanClassifiedCompanies" style="display:inline; margin-right: .5rem;">
+                <button type="submit" class="btn btn-info me-2">
+                    <i class="bi bi-brush me-1"></i>Limpiar nombres
+                </button>
+            </form>
+            <form method="post" action="index.php?c=dashboard&a=deleteAllClassifiedFiles" style="display:inline; margin-right: .5rem;" onsubmit="return confirm('¿Eliminar todos los archivos clasificados? Esta acción no se puede deshacer.');">
+                <button type="submit" class="btn btn-danger me-2">
+                    <i class="bi bi-trash-fill me-1"></i>Eliminar Todo
+                </button>
+            </form>
+            <button type="button" id="selectAllBtn" class="btn btn-secondary me-2">
                 <i class="bi bi-check-square me-1"></i>Seleccionar Todo
             </button>
-            <button type="button" id="deleteSelectedBtn" class="btn btn-outline-danger" disabled>
+            <button type="button" id="deleteSelectedBtn" class="btn btn-danger" disabled>
                 <i class="bi bi-trash me-1"></i>Eliminar Seleccionados
             </button>
         </div>
@@ -58,26 +68,87 @@
             </div>
         </div>
     <?php else: ?>
+        <?php
+            $totalCompanies = count($companies);
+            $totalFiles = 0;
+            foreach ($companies as $companyData) {
+                foreach ($companyData['company_dirs'] as $companyDirData) {
+                    foreach ($companyDirData['folders'] as $folderData) {
+                        $totalFiles += count($folderData['files']);
+                    }
+                }
+            }
+        ?>
+        <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary text-white rounded-3 me-3 d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
+                                <i class="bi bi-building fs-4"></i>
+                            </div>
+                            <div>
+                                <small class="text-uppercase text-white-50">Empresas</small>
+                                <h3 class="mb-0"><?php echo $totalCompanies; ?></h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-info text-white rounded-3 me-3 d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
+                                <i class="bi bi-file-earmark-text-fill fs-4"></i>
+                            </div>
+                            <div>
+                                <small class="text-uppercase text-white-50">Archivos</small>
+                                <h3 class="mb-0"><?php echo $totalFiles; ?></h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-xl-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-success text-white rounded-3 me-3 d-flex align-items-center justify-content-center" style="width:48px;height:48px;">
+                                <i class="bi bi-award fs-4"></i>
+                            </div>
+                            <div>
+                                <small class="text-uppercase text-white-50">Presentación</small>
+                                <p class="mb-0 text-white-50">Vista en tarjetas más clara y ordenada.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="accordion" id="companiesAccordion">
             <?php $index = 0; foreach ($companies as $companyKey => $companyData): ?>
+                <?php
+                    $companyFiles = 0;
+                    foreach ($companyData['company_dirs'] as $companyDirData) {
+                        foreach ($companyDirData['folders'] as $folderData) {
+                            $companyFiles += count($folderData['files']);
+                        }
+                    }
+                ?>
                 <div class="accordion-item company-card" data-company="<?php echo htmlspecialchars(strtolower($companyData['display_name'])); ?>">
                     <h2 class="accordion-header" id="heading<?php echo $index; ?>">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse<?php echo $index; ?>" aria-expanded="false" aria-controls="collapse<?php echo $index; ?>">
-                            <div class="d-flex align-items-center w-100">
-                                <input type="checkbox" class="form-check-input me-3 company-checkbox" value="<?php echo htmlspecialchars($companyData['display_name']); ?>">
-                                <i class="bi bi-building me-2"></i>
-                                <?php echo htmlspecialchars($companyData['display_name']); ?>
-                                <span class="badge bg-secondary ms-2">
-                                <?php 
-                                $totalFiles = 0;
-                                foreach ($companyData['company_dirs'] as $companyDirData) {
-                                    foreach ($companyDirData['folders'] as $folder) {
-                                        $totalFiles += count($folder['files']);
-                                    }
-                                }
-                                echo $totalFiles . ' archivo' . ($totalFiles !== 1 ? 's' : '');
-                                ?>
-                            </span>
+                            <div class="d-flex align-items-center justify-content-between w-100">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-building-fill text-primary fs-3 me-3"></i>
+                                    <div>
+                                        <div class="fw-semibold"><?php echo htmlspecialchars($companyData['display_name']); ?></div>
+                                        <small class="text-white-50"><?php echo count($companyData['company_dirs']); ?> carpeta<?php echo count($companyData['company_dirs']) !== 1 ? 's' : ''; ?></small>
+                                    </div>
+                                </div>
+                                <span class="badge bg-secondary py-2 px-3"><?php echo $companyFiles; ?> archivo<?php echo $companyFiles !== 1 ? 's' : ''; ?></span>
                             </div>
                         </button>
                     </h2>
@@ -93,67 +164,63 @@
                                 }
                             ?>
                             <?php if (!$hasFolders): ?>
-                                <p class="text-muted mb-0">No hay carpetas en esta empresa.</p>
+                                <div class="alert alert-secondary mb-0">No hay carpetas en esta empresa.</div>
                             <?php else: ?>
-                                <?php foreach ($companyData['company_dirs'] as $companyDir => $companyDirData): ?>
-                                    <?php foreach ($companyDirData['folders'] as $folderName => $folderData): ?>
-                                        <div class="mb-4">
-                                            <h6 class="text-secondary mb-3">
-                                                <i class="bi bi-folder me-1"></i>
-                                                <?php echo htmlspecialchars($folderName); ?>
-                                            </h6>
-                                            <?php if (empty($folderData['files'])): ?>
-                                                <small class="text-muted">Sin archivos</small>
-                                            <?php else: ?>
-                                                <div class="row">
-                                                    <?php foreach ($folderData['files'] as $file): ?>
-                                                        <div class="col-md-6 col-lg-4 mb-3">
-                                                            <div class="card h-100">
-                                                                <div class="card-body d-flex flex-column">
-                                                                    <div class="d-flex align-items-start mb-2">
-                                                                        <input type="checkbox" class="form-check-input me-2 file-checkbox" 
-                                                                               name="files[]" 
-                                                                               value="<?php echo htmlspecialchars($companyDir . '|' . $folderName . '|' . $file['name']); ?>">
-                                                                        <i class="bi bi-file-earmark-excel text-success me-2 fs-5"></i>
-                                                                        <div class="flex-grow-1">
-                                                                            <h6 class="card-title mb-1" title="<?php echo htmlspecialchars($file['name']); ?>">
-                                                                                <?php echo htmlspecialchars($file['name']); ?>
-                                                                            </h6>
-                                                                            <small class="text-muted">
-                                                                                <?php 
-                                                                                $size = $file['size'];
-                                                                                if ($size >= 1048576) {
-                                                                                    echo round($size / 1048576, 2) . ' MB';
-                                                                                } elseif ($size >= 1024) {
-                                                                                    echo round($size / 1024, 2) . ' KB';
-                                                                                } else {
-                                                                                    echo $size . ' bytes';
-                                                                                }
-                                                                                ?> • Modificado: <?php echo $file['modified']; ?>
-                                                                            </small>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div class="mt-auto">
-                                                                        <div class="btn-group w-100" role="group">
-                                                                            <a href="index.php?c=dashboard&a=download&company=<?php echo urlencode($companyDir); ?>&folder=<?php echo urlencode($folderName); ?>&file=<?php echo urlencode($file['name']); ?>"
-                                                                               class="btn btn-outline-primary btn-sm">
-                                                                                <i class="bi bi-download me-1"></i>Descargar
-                                                                            </a>
-                                                                            <button type="button" class="btn btn-outline-danger btn-sm" 
-                                                                                    onclick="confirmDelete('<?php echo htmlspecialchars($companyDir); ?>', '<?php echo htmlspecialchars($folderName); ?>', '<?php echo htmlspecialchars($file['name']); ?>')">
-                                                                                <i class="bi bi-trash me-1"></i>Eliminar
-                                                                            </button>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
+                                <div class="row g-3">
+                                    <?php foreach ($companyData['company_dirs'] as $companyDir => $companyDirData): ?>
+                                        <?php foreach ($companyDirData['folders'] as $folderName => $folderData): ?>
+                                            <?php $prettyFolder = trim(preg_replace('/\s+/', ' ', str_replace('_', ' ', $folderName))); ?>
+                                            <div class="col-12 col-md-6">
+                                                <div class="card shadow-sm border-0 h-100">
+                                                    <div class="card-body">
+                                                        <div class="d-flex align-items-center justify-content-between mb-3">
+                                                            <div>
+                                                                <h6 class="mb-1"><?php echo htmlspecialchars($prettyFolder); ?></h6>
+                                                                <small class="text-white-50"><?php echo count($folderData['files']); ?> archivo<?php echo count($folderData['files']) !== 1 ? 's' : ''; ?></small>
                                                             </div>
+                                                            <i class="bi bi-folder-fill text-warning fs-4"></i>
                                                         </div>
-                                                    <?php endforeach; ?>
+                                                        <?php if (empty($folderData['files'])): ?>
+                                                            <p class="text-white-50 mb-0">Sin archivos</p>
+                                                        <?php else: ?>
+                                                            <div class="list-group list-group-flush">
+                                                                <?php foreach ($folderData['files'] as $file): ?>
+                                                                    <div class="list-group-item px-0 border-0 py-2">
+                                                                        <div class="row align-items-center gx-2">
+                                                                            <div class="col">
+                                                                                <div class="fw-semibold text-truncate"><?php echo htmlspecialchars($file['name']); ?></div>
+                                                                                <small class="text-white-50">
+                                                                                    <?php 
+                                                                                    $size = $file['size'];
+                                                                                    if ($size >= 1048576) {
+                                                                                        echo round($size / 1048576, 2) . ' MB';
+                                                                                    } elseif ($size >= 1024) {
+                                                                                        echo round($size / 1024, 2) . ' KB';
+                                                                                    } else {
+                                                                                        echo $size . ' bytes';
+                                                                                    }
+                                                                                    ?> • Modificado: <?php echo $file['modified']; ?>
+                                                                                </small>
+                                                                            </div>
+                                                                            <div class="col-auto text-end">
+                                                                                <a href="index.php?c=dashboard&a=download&company=<?php echo urlencode($companyDir); ?>&folder=<?php echo urlencode($folderName); ?>&file=<?php echo urlencode($file['name']); ?>" class="btn btn-sm btn-primary mb-2">
+                                                                                    <i class="bi bi-download me-1"></i>Descargar
+                                                                                </a>
+                                                                                <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete('<?php echo htmlspecialchars($companyDir); ?>', '<?php echo htmlspecialchars($folderName); ?>', '<?php echo htmlspecialchars($file['name']); ?>')">
+                                                                                    <i class="bi bi-trash me-1"></i>Eliminar
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                <?php endforeach; ?>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                    </div>
                                                 </div>
-                                            <?php endif; ?>
-                                        </div>
+                                            </div>
+                                        <?php endforeach; ?>
                                     <?php endforeach; ?>
-                                <?php endforeach; ?>
+                                </div>
                             <?php endif; ?>
                         </div>
                     </div>

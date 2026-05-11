@@ -1,7 +1,9 @@
 <?php include __DIR__ . '/../layouts/header.php'; ?>
 
 <h1>Agregar examen</h1>
-<p><a class="btn" href="index.php?c=dashboard&a=index">Volver</a></p>
+<p><a class="btn btn-outline-secondary" href="index.php?c=dashboard&a=index">
+    <i class="bi bi-arrow-left me-1"></i>Volver
+</a></p>
 
 <?php if (!empty($error)): ?>
     <div class="alert alert-error"><?= htmlspecialchars($error) ?></div>
@@ -43,7 +45,9 @@
     <label>Datos del candidato (texto libre, sin límite de caracteres)</label>
     <textarea name="candidate_text" rows="8" placeholder="Pega aquí los datos de una o varias personas."><?= htmlspecialchars($_POST['candidate_text'] ?? '') ?></textarea>
 
-    <button type="submit">Crear examen</button>
+    <button type="submit" class="btn btn-success">
+        <i class="bi bi-plus-circle me-1"></i>Crear examen
+    </button>
 </form>
 
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

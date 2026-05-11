@@ -65,69 +65,69 @@
                             <label for="companyColumn" class="form-label fw-semibold">
                                 <i class="bi bi-building me-2"></i>Columna de Empresa *
                             </label>
-                            <input type="text" class="form-control" id="companyColumn" name="company_column" placeholder="Ej: A, Empresa, Company" value="A" required>
+                            <input type="text" class="form-control" id="companyColumn" name="company_column" placeholder="Ej: A, Empresa, Company" value="AC" required>
                         </div>
 
                         <div class="mb-4">
                             <label for="nameColumn" class="form-label fw-semibold">
                                 <i class="bi bi-person me-2"></i>Columna de Nombre *
                             </label>
-                            <input type="text" class="form-control" id="nameColumn" name="name_column" placeholder="Ej: B, Nombre" value="B">
+                            <input type="text" class="form-control" id="nameColumn" name="name_column" placeholder="Ej: B, Nombre" value="E">
                         </div>
 
                         <div class="mb-4">
                             <label for="documentColumn" class="form-label fw-semibold">
                                 <i class="bi bi-card-text me-2"></i>Columna de Documento
                             </label>
-                            <input type="text" class="form-control" id="documentColumn" name="document_column" placeholder="Ej: C, Cedula">
+                            <input type="text" class="form-control" id="documentColumn" name="document_column" placeholder="Ej: C, Cedula" value="D">
                         </div>
 
                         <div class="mb-4">
                             <label for="phoneColumn" class="form-label fw-semibold">
                                 <i class="bi bi-telephone me-2"></i>Columna de Teléfono
                             </label>
-                            <input type="text" class="form-control" id="phoneColumn" name="phone_column" placeholder="Ej: D, Telefono">
+                            <input type="text" class="form-control" id="phoneColumn" name="phone_column" placeholder="Ej: D, Telefono" value="H">
                         </div>
 
                         <div class="mb-4">
                             <label for="genderColumn" class="form-label fw-semibold">
                                 <i class="bi bi-person-check me-2"></i>Columna de Género
                             </label>
-                            <input type="text" class="form-control" id="genderColumn" name="gender_column" placeholder="Ej: E, Genero">
+                            <input type="text" class="form-control" id="genderColumn" name="gender_column" placeholder="Ej: E, Genero" value="I">
                         </div>
 
                         <div class="mb-4">
                             <label for="birthColumn" class="form-label fw-semibold">
                                 <i class="bi bi-calendar-event me-2"></i>Columna de Fecha Nacimiento
                             </label>
-                            <input type="text" class="form-control" id="birthColumn" name="birth_column" placeholder="Ej: F, Fecha_Nacimiento">
+                            <input type="text" class="form-control" id="birthColumn" name="birth_column" placeholder="Ej: F, Fecha_Nacimiento" value="K">
                         </div>
 
                         <div class="mb-4">
                             <label for="examDateColumn" class="form-label fw-semibold">
                                 <i class="bi bi-calendar2-event me-2"></i>Columna de Fecha de Examen
                             </label>
-                            <input type="text" class="form-control" id="examDateColumn" name="exam_date_column" placeholder="Ej: G, Fecha_Examen">
+                            <input type="text" class="form-control" id="examDateColumn" name="exam_date_column" placeholder="Ej: G, Fecha_Examen" value="X">
                         </div>
 
                         <div class="mb-4">
                             <label for="resultColumn" class="form-label fw-semibold">
                                 <i class="bi bi-check2-circle me-2"></i>Columna de Resultado
                             </label>
-                            <input type="text" class="form-control" id="resultColumn" name="result_column" placeholder="Ej: H, Resultado, Estado">
+                            <input type="text" class="form-control" id="resultColumn" name="result_column" placeholder="Ej: H, Resultado, Estado" value="V">
                         </div>
 
                         <div class="mb-4" id="customColumnsContainer"></div>
 
                         <div class="mb-4">
-                            <button type="button" class="btn btn-secondary" id="addColumnBtn">
-                                <i class="bi bi-plus-circle me-2"></i>Agregar Columna Nueva
+                            <button type="button" class="btn btn-info" id="addColumnBtn">
+                                <i class="bi bi-plus-circle me-1"></i>Agregar Columna Nueva
                             </button>
                         </div>
 
                         <div class="d-flex gap-2 flex-wrap">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="bi bi-cloud-upload me-2"></i>Procesar Archivo
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-cloud-upload me-1"></i>Procesar Archivo
                         </button>
                         <a href="index.php?c=dashboard&a=index" class="btn btn-outline-secondary btn-lg">
                             <i class="bi bi-arrow-left me-2"></i>Volver al Dashboard
@@ -232,7 +232,7 @@
                                     <tr>
                                         <td class="fw-semibold"><?php echo htmlspecialchars($company); ?></td>
                                         <td class="text-center">
-                                            <span class="badge badge-primary bg-primary"><?php echo $count; ?></span>
+                                            <span class="badge badge-primary bg-primary text-white"><?php echo $count; ?></span>
                                         </td>
                                         <td class="text-center">
                                             <?php 
@@ -246,7 +246,7 @@
                                 <tr class="table-light fw-bold">
                                     <td>TOTAL</td>
                                     <td class="text-center">
-                                        <span class="badge badge-success bg-success"><?php echo array_sum($results); ?></span>
+                                        <span class="badge badge-success bg-success text-white"><?php echo array_sum($results); ?></span>
                                     </td>
                                     <td class="text-center">100%</td>
                                 </tr>

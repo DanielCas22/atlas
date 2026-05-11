@@ -6,6 +6,10 @@ namespace Composer\Autoload;
 
 class ComposerStaticInit9f46c646f1fbb9c01cbfcb89fa902cfe
 {
+    public static $files = array (
+        '2cffec82183ee1cea088009cef9a6fc3' => __DIR__ . '/..' . '/ezyang/htmlpurifier/library/HTMLPurifier.composer.php',
+    );
+
     public static $prefixLengthsPsr4 = array (
         'Z' =>
         array (
@@ -14,11 +18,13 @@ class ComposerStaticInit9f46c646f1fbb9c01cbfcb89fa902cfe
         'P' =>
         array (
             'Psr\\SimpleCache\\' => 16,
+            'Psr\\Http\\Message\\' => 17,
             'PhpOffice\\PhpSpreadsheet\\' => 25,
             'PHPMailer\\PHPMailer\\' => 20,
         ),
         'M' =>
         array (
+            'MyCLabs\\Enum\\' => 13,
             'Matrix\\' => 7,
         ),
         'C' =>
@@ -41,6 +47,10 @@ class ComposerStaticInit9f46c646f1fbb9c01cbfcb89fa902cfe
         array (
             0 => __DIR__ . '/..' . '/psr/simple-cache/src',
         ),
+        'Psr\\Http\\Message\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/psr/http-message/src',
+        ),
         'PhpOffice\\PhpSpreadsheet\\' =>
         array (
             0 => __DIR__ . '/..' . '/phpoffice/phpspreadsheet/src/PhpSpreadsheet',
@@ -48,6 +58,10 @@ class ComposerStaticInit9f46c646f1fbb9c01cbfcb89fa902cfe
         'PHPMailer\\PHPMailer\\' =>
         array (
             0 => __DIR__ . '/..' . '/phpmailer/phpmailer/src',
+        ),
+        'MyCLabs\\Enum\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/myclabs/php-enum/src',
         ),
         'Matrix\\' =>
         array (
@@ -67,11 +81,22 @@ class ComposerStaticInit9f46c646f1fbb9c01cbfcb89fa902cfe
         ),
     );
 
+    public static $prefixesPsr0 = array (
+        'H' =>
+        array (
+            'HTMLPurifier' =>
+            array (
+                0 => __DIR__ . '/..' . '/ezyang/htmlpurifier/library',
+            ),
+        ),
+    );
+
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'Datamatrix' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/barcodes/datamatrix.php',
         'PDF417' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/barcodes/pdf417.php',
         'QRcode' => __DIR__ . '/..' . '/tecnickcom/tcpdf/include/barcodes/qrcode.php',
+        'Stringable' => __DIR__ . '/..' . '/myclabs/php-enum/stubs/Stringable.php',
         'TCPDF' => __DIR__ . '/..' . '/tecnickcom/tcpdf/tcpdf.php',
         'TCPDF2DBarcode' => __DIR__ . '/..' . '/tecnickcom/tcpdf/tcpdf_barcodes_2d.php',
         'TCPDFBarcode' => __DIR__ . '/..' . '/tecnickcom/tcpdf/tcpdf_barcodes_1d.php',
@@ -88,6 +113,7 @@ class ComposerStaticInit9f46c646f1fbb9c01cbfcb89fa902cfe
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInit9f46c646f1fbb9c01cbfcb89fa902cfe::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInit9f46c646f1fbb9c01cbfcb89fa902cfe::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInit9f46c646f1fbb9c01cbfcb89fa902cfe::$prefixesPsr0;
             $loader->classMap = ComposerStaticInit9f46c646f1fbb9c01cbfcb89fa902cfe::$classMap;
 
         }, null, ClassLoader::class);

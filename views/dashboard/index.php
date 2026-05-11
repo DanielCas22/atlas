@@ -8,7 +8,7 @@
                 <h1 class="display-4 fw-bold text-primary mb-3">
                     <i class="bi bi-shield-check me-3"></i>Atlas Seguridad
                 </h1>
-                <p class="lead fw-semibold mb-4" style="color:#fff;">Atlas - Gestión y Clasificación de Exámenes Médicos</p>
+                <p class="lead fw-semibold mb-4 text-white">Atlas - Gestión y Clasificación de Exámenes Médicos</p>
                 <hr class="w-25 mx-auto mb-4">
             </div>
         </div>
@@ -109,7 +109,7 @@
                         <i class="bi bi-building fs-1"></i>
                     </div>
                     <h3 class="fw-bold mb-1">0</h3>
-                    <p class="fw-semibold mb-0" style="color:#fff;">Empresas Registradas</p>
+                    <p class="fw-semibold mb-0 text-white">Empresas Registradas</p>
                 </div>
             </div>
         </div>
@@ -120,7 +120,7 @@
                         <i class="bi bi-clipboard-check fs-1"></i>
                     </div>
                     <h3 class="fw-bold mb-1">0</h3>
-                    <p class="fw-semibold mb-0" style="color:#fff;">Exámenes Realizados</p>
+                    <p class="fw-semibold mb-0 text-white">Exámenes Realizados</p>
                 </div>
             </div>
         </div>
@@ -131,7 +131,7 @@
                         <i class="bi bi-people fs-1"></i>
                     </div>
                     <h3 class="fw-bold mb-1">0</h3>
-                    <p class="fw-semibold mb-0" style="color:#fff;">Usuarios Activos</p>
+                    <p class="fw-semibold mb-0 text-white">Usuarios Activos</p>
                 </div>
             </div>
         </div>

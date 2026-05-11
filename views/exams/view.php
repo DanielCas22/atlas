@@ -48,8 +48,12 @@
                         <dd class="col-sm-8"><?= htmlspecialchars($exam['updated_at'] ?? 'N/A') ?></dd>
                     </dl>
                     <div class="mt-3">
-                        <a class="btn btn-warning" href="index.php?c=exam&a=edit&id=<?= intval($exam['id']) ?>">Editar</a>
-                        <a class="btn btn-danger" href="index.php?c=exam&a=delete&id=<?= intval($exam['id']) ?>" onclick="return confirm('¿Eliminar paciente?');">Eliminar</a>
+                        <a class="btn btn-warning me-2" href="index.php?c=exam&a=edit&id=<?= intval($exam['id']) ?>">
+                            <i class="bi bi-pencil me-1"></i>Editar
+                        </a>
+                        <a class="btn btn-danger" href="index.php?c=exam&a=delete&id=<?= intval($exam['id']) ?>" onclick="return confirm('¿Eliminar paciente?');">
+                            <i class="bi bi-trash me-1"></i>Eliminar
+                        </a>
                     </div>
                 </div>
             </div>

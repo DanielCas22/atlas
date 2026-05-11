@@ -28,16 +28,36 @@ class CompanyModel extends BaseModel
 
     public function normalizeCompanyName(string $name)
     {
+        // Eliminar prefijos como LISTADO
         $clean = preg_replace('/^LISTADO[ _-]*/iu', '', $name);
-        $clean = str_replace('_', ' ', $clean);
-        $clean = str_replace('COMPA IA', 'COMPAÑIA', $clean);
+        
+        // Reemplazar múltiples guiones bajos por espacio
+        $clean = preg_replace('/_+/', ' ', $clean);
+        
+        // Corregir errores de encoding de COMPAÑÍA
+        $clean = str_replace('COMPA_IA', 'COMPAÑÍA', $clean);
+        $clean = str_replace('COMPA IA', 'COMPAÑÍA', $clean);
+        $clean = str_replace('COMPA__A', 'COMPAÑÍA', $clean);
+        $clean = str_replace('COMPA A', 'COMPAÑÍA', $clean);
+        
+        // Corregir errores de AMÉRICA
+        $clean = str_replace('AM_RICA', 'AMÉRICA', $clean);
+        $clean = str_replace('AM RICA', 'AMÉRICA', $clean);
+        
+        // Eliminar guiones triples o más
+        $clean = preg_replace('/-{3,}/', ' - ', $clean);
+        
+        // Limpiar espacios múltiples
+        $clean = preg_replace('/\s+/', ' ', $clean);
+        
         return trim($clean);
     }
 
     public function sanitizeCompanyFolderName(string $name)
     {
         $folder = trim($name);
-        $folder = preg_replace('/[\\\/]+/', '_', $folder);
+        // Replace backslashes and forward slashes with underscores
+        $folder = str_replace(['\\', '/'], '_', $folder);
         $folder = preg_replace('/\s+/', ' ', $folder);
         $folder = trim($folder);
         return $folder;

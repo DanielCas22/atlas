@@ -20,8 +20,12 @@
         <input type="text" id="contact" name="contact" value="<?= htmlspecialchars($_POST['contact'] ?? $company['contact'] ?? '') ?>">
     </div>
 
-    <button type="submit" class="btn">Guardar</button>
-    <a class="btn" href="index.php?c=company&a=list">Cancelar</a>
+    <button type="submit" class="btn btn-success me-2">
+        <i class="bi bi-check-circle me-1"></i>Guardar cambios
+    </button>
+    <a class="btn btn-outline-secondary" href="index.php?c=company&a=list">
+        <i class="bi bi-x-circle me-1"></i>Cancelar
+    </a>
 </form>
 
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

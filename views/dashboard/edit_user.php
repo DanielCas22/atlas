@@ -36,9 +36,13 @@ $apellidos = $fullnameParts[1] ?? '';
     <label>Contraseña</label>
     <input type="password" name="password" placeholder="Dejar en blanco para no cambiarla">
 
-    <button type="submit" class="btn">Actualizar</button>
+    <button type="submit" class="btn btn-success me-2">
+        <i class="bi bi-check-circle me-1"></i>Actualizar
+    </button>
 </form>
 
-<p><a class="btn" href="index.php?c=dashboard&a=users">Volver a Usuarios</a></p>
+<p><a class="btn btn-outline-secondary" href="index.php?c=dashboard&a=users">
+    <i class="bi bi-arrow-left me-1"></i>Volver a Usuarios
+</a></p>
 
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

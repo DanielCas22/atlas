@@ -1,21 +1,47 @@
 <?php
 
+require_once __DIR__ . '/../helpers/Logger.php';
+require_once __DIR__ . '/../helpers/FlashMessage.php';
+
+/**
+ * Controller for managing exams
+ * Handles CRUD operations for exam records
+ */
 class ExamController
 {
     private $examModel;
 
+    /**
+     * Constructor - initializes the exam model
+     */
     public function __construct()
     {
         $this->examModel = new ExamModel();
     }
 
+    /**
+     * Display list of all exams
+     * @return void
+     */
     public function list()
     {
         $this->ensureAuth();
-        $exams = $this->examModel->all();
-        include __DIR__ . '/../views/exams/list.php';
+        try {
+            $exams = $this->examModel->all();
+            Logger::info('Exams list displayed', ['count' => count($exams)]);
+            include __DIR__ . '/../views/exams/list.php';
+        } catch (Exception $e) {
+            Logger::error('Error displaying exams list', ['error' => $e->getMessage()]);
+            FlashMessage::set('error', 'Error al cargar la lista de exámenes.');
+            header('Location: index.php?c=dashboard&a=index');
+            exit;
+        }
     }
 
+    /**
+     * Display form to add new exam
+     * @return void
+     */
     public function add()
     {
         $this->ensureAuth();
@@ -70,40 +96,81 @@ class ExamController
                 $candidates = $this->extractCandidates($candidateText);
             }
 
-            if (empty($error) && $company_id && $exam_type_id && !empty($candidates) && !empty($order_number)) {
-                foreach ($candidates as $candidate) {
-                    // Usar siempre el número de orden ingresado manualmente para todos los candidatos
-                    $candidate['order_number'] = $order_number;
-                    $status = $candidate['status'] ?? 'PENDIENTE';
-                    $this->examModel->add(
-                        $company_id,
-                        $exam_type_id,
-                        $candidate['name'],
-                        $candidate['document_number'],
-                        $candidate['phone'],
-                        $candidate['gender'],
-                        $candidate['birth_date'],
-                        $candidate['exam_date'],
-                        $candidate['order_number'],
-                        $status
-                    );
+            // Validations
+            $errors = [];
+
+            if (empty($company_id)) {
+                $errors[] = 'Debe seleccionar o ingresar una empresa válida.';
+            }
+
+            if (empty($exam_type_id)) {
+                $errors[] = 'Debe seleccionar un tipo de examen.';
+            }
+
+            if (empty($order_number)) {
+                $errors[] = 'El número de orden es obligatorio.';
+            } elseif (!preg_match('/^[A-Za-z0-9\-_]+$/', $order_number)) {
+                $errors[] = 'El número de orden contiene caracteres no válidos.';
+            }
+
+            if (empty($candidates)) {
+                $errors[] = 'Debe ingresar candidatos como texto o subir un archivo Excel/CSV.';
+            }
+
+            if (empty($errors)) {
+                try {
+                    foreach ($candidates as $candidate) {
+                        // Validate candidate data
+                        if (empty($candidate['name']) || empty($candidate['document_number'])) {
+                            throw new Exception('Datos de candidato incompletos: nombre y documento son obligatorios.');
+                        }
+
+                        // Usar siempre el número de orden ingresado manualmente para todos los candidatos
+                        $candidate['order_number'] = $order_number;
+                        $status = $candidate['status'] ?? 'PENDIENTE';
+
+                        $this->examModel->add(
+                            $company_id,
+                            $exam_type_id,
+                            $candidate['name'],
+                            $candidate['document_number'],
+                            $candidate['phone'],
+                            $candidate['gender'],
+                            $candidate['birth_date'],
+                            $candidate['exam_date'],
+                            $candidate['order_number'],
+                            $status
+                        );
+                    }
+
+                    Logger::audit('Exam added', $_SESSION['user'] ?? 'unknown', [
+                        'company_id' => $company_id,
+                        'exam_type_id' => $exam_type_id,
+                        'candidates_count' => count($candidates),
+                        'order_number' => $order_number
+                    ]);
+
+                    FlashMessage::set('success', 'Examen agregado exitosamente con ' . count($candidates) . ' candidato(s).');
+                    header('Location: index.php?c=dashboard&a=index');
+                    exit;
+                } catch (Exception $e) {
+                    Logger::error('Error adding exam', ['error' => $e->getMessage(), 'data' => $_POST]);
+                    $errors[] = 'Error al guardar el examen: ' . $e->getMessage();
                 }
-
-                header('Location: index.php?c=dashboard&a=index');
-                exit;
             }
 
-            if (empty($error) && empty($candidates)) {
-                $error = 'Debes ingresar candidatos como texto o subir un archivo Excel/CSV.';
-            }
-            if (empty($error) && (empty($company_id) || empty($exam_type_id) || empty($order_number))) {
-                $error = 'Complete todos los campos obligatorios.';
+            if (!empty($errors)) {
+                $error = implode('<br>', $errors);
             }
         }
 
         include __DIR__ . '/../views/exams/add.php';
     }
 
+    /**
+     * Update exam status
+     * @return void
+     */
     public function status()
     {
         $this->ensureAuth();
@@ -111,8 +178,21 @@ class ExamController
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = intval($_POST['id'] ?? 0);
             $status = $_POST['status'] ?? '';
+
             if ($id && in_array($status, ['PENDIENTE','EN_CURSO','FINALIZADO','RECHAZADO','SIN_RESULTADO'])) {
-                $this->examModel->updateStatus($id, $status);
+                try {
+                    $this->examModel->updateStatus($id, $status);
+                    Logger::audit('Exam status updated', $_SESSION['user'] ?? 'unknown', [
+                        'exam_id' => $id,
+                        'new_status' => $status
+                    ]);
+                    FlashMessage::set('success', 'Estado del examen actualizado correctamente.');
+                } catch (Exception $e) {
+                    Logger::error('Error updating exam status', ['exam_id' => $id, 'error' => $e->getMessage()]);
+                    FlashMessage::set('error', 'Error al actualizar el estado del examen.');
+                }
+            } else {
+                FlashMessage::set('error', 'Datos inválidos para actualizar el estado.');
             }
         }
 
@@ -120,19 +200,44 @@ class ExamController
         exit;
     }
 
+    /**
+     * Delete an exam
+     * @return void
+     */
     public function delete()
     {
         $this->ensureAuth();
 
         $id = intval($_GET['id'] ?? 0);
         if ($id) {
-            $this->examModel->delete($id);
+            try {
+                $exam = $this->examModel->findById($id);
+                if ($exam) {
+                    $this->examModel->delete($id);
+                    Logger::audit('Exam deleted', $_SESSION['user'] ?? 'unknown', [
+                        'exam_id' => $id,
+                        'candidate_name' => $exam['candidate_name']
+                    ]);
+                    FlashMessage::set('success', 'Examen eliminado correctamente.');
+                } else {
+                    FlashMessage::set('error', 'Examen no encontrado.');
+                }
+            } catch (Exception $e) {
+                Logger::error('Error deleting exam', ['exam_id' => $id, 'error' => $e->getMessage()]);
+                FlashMessage::set('error', 'Error al eliminar el examen.');
+            }
+        } else {
+            FlashMessage::set('error', 'ID de examen inválido.');
         }
 
         header('Location: index.php?c=exam&a=list');
         exit;
     }
 
+    /**
+     * Edit an exam
+     * @return void
+     */
     public function edit()
     {
         $this->ensureAuth();
@@ -141,6 +246,7 @@ class ExamController
         $exam = $this->examModel->findById($id);
 
         if (!$exam) {
+            FlashMessage::set('error', 'Examen no encontrado.');
             header('Location: index.php?c=exam&a=list');
             exit;
         }
@@ -155,18 +261,63 @@ class ExamController
             $order_number = trim($_POST['order_number'] ?? '');
             $status = trim($_POST['status'] ?? 'PENDIENTE');
 
-            if ($candidate_name !== '' && $document_number !== '') {
-                $this->examModel->update($id, $candidate_name, $document_number, $phone, $gender, $birth_date, $exam_date, $order_number, $status);
-                header('Location: index.php?c=exam&a=list');
-                exit;
+            // Validations
+            $errors = [];
+            if (empty($candidate_name)) {
+                $errors[] = 'El nombre del candidato es obligatorio.';
+            }
+            if (empty($document_number)) {
+                $errors[] = 'El número de documento es obligatorio.';
+            }
+            if (!empty($gender) && !in_array($gender, ['M', 'F', 'O'])) {
+                $errors[] = 'El género debe ser M, F u O.';
+            }
+            if (!empty($birth_date) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $birth_date)) {
+                $errors[] = 'La fecha de nacimiento debe tener formato YYYY-MM-DD.';
+            }
+            if (!empty($exam_date) && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $exam_date)) {
+                $errors[] = 'La fecha del examen debe tener formato YYYY-MM-DD.';
             }
 
-            $error = 'Nombre y documento son obligatorios';
+            if (empty($errors)) {
+                try {
+                    $this->examModel->update($id, $candidate_name, $document_number, $phone, $gender, $birth_date, $exam_date, $order_number, $status);
+                    Logger::audit('Exam updated', $_SESSION['user'] ?? 'unknown', [
+                        'exam_id' => $id,
+                        'candidate_name' => $candidate_name
+                    ]);
+                    FlashMessage::set('success', 'Examen actualizado correctamente.');
+                    header('Location: index.php?c=exam&a=list');
+                    exit;
+                } catch (Exception $e) {
+                    Logger::error('Error updating exam', ['exam_id' => $id, 'error' => $e->getMessage()]);
+                    $error = 'Error al actualizar el examen: ' . $e->getMessage();
+                }
+            } else {
+                $error = implode('<br>', $errors);
+            }
         }
 
         include __DIR__ . '/../views/exams/edit.php';
     }
 
+    /**
+     * Ensure user is authenticated
+     * @throws Exception If user is not authenticated
+     */
+    private function ensureAuth()
+    {
+        if (!isset($_SESSION['user'])) {
+            Logger::warning('Unauthorized access attempt', ['ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown']);
+            header('Location: index.php?c=auth&a=login');
+            exit;
+        }
+    }
+
+    /**
+     * View exam details
+     * @return void
+     */
     public function view()
     {
         $this->ensureAuth();
@@ -748,13 +899,5 @@ class ExamController
         $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save('php://output');
         exit;
-    }
-
-    private function ensureAuth()
-    {
-        if (empty($_SESSION['user'])) {
-            header('Location: index.php');
-            exit;
-        }
     }
 }

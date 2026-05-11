@@ -47,9 +47,13 @@
     <label>Contraseña<span>*</span></label>
     <input type="password" name="password" required>
 
-    <button type="submit" class="btn">Guardar</button>
+    <button type="submit" class="btn btn-success me-2">
+        <i class="bi bi-check-circle me-1"></i>Guardar
+    </button>
 </form>
 
-<p><a class="btn" href="index.php?c=dashboard&a=users">Volver a Usuarios</a></p>
+<p><a class="btn btn-outline-secondary" href="index.php?c=dashboard&a=users">
+    <i class="bi bi-arrow-left me-1"></i>Volver a Usuarios
+</a></p>
 
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

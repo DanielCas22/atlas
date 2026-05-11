@@ -1,4 +1,7 @@
-<?php include __DIR__ . '/../layouts/header.php'; ?>
+<?php
+include __DIR__ . '/../layouts/header.php';
+require_once __DIR__ . '/../../helpers/FlashMessage.php';
+?>
 
 <div class="container-fluid py-4">
     <!-- Header Section -->
@@ -22,6 +25,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Flash Messages -->
+    <?= FlashMessage::display() ?>
 
     <!-- Table Section -->
     <div class="row">
@@ -110,29 +116,29 @@
                                             ];
                                             $statusInfo = $statusMap[$exam['status']] ?? ['Pendiente', 'secondary'];
                                             ?>
-                                            <span class="badge bg-<?= $statusInfo[1] ?>">
+                                            <span class="badge bg-<?= $statusInfo[1] ?> text-white">
                                                 <?= htmlspecialchars($statusInfo[0]) ?>
                                             </span>
                                         </td>
                                         <td>
-                                            <span class="badge bg-info">
+                                            <span class="badge bg-info text-white">
                                                 <?= htmlspecialchars($exam['order_number'] ?? 'N/A') ?>
                                             </span>
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group" role="group">
-                                                <a class="btn btn-sm btn-outline-primary" href="index.php?c=exam&a=view&id=<?= $exam['id'] ?>"
+                                                <a class="btn btn-sm btn-primary" href="index.php?c=exam&a=view&id=<?= $exam['id'] ?>"
                                                    data-bs-toggle="tooltip" title="Ver detalles">
-                                                    <i class="bi bi-eye"></i>
+                                                    <i class="bi bi-eye me-1"></i>Ver
                                                 </a>
-                                                <a class="btn btn-sm btn-outline-warning" href="index.php?c=exam&a=edit&id=<?= $exam['id'] ?>"
+                                                <a class="btn btn-sm btn-warning" href="index.php?c=exam&a=edit&id=<?= $exam['id'] ?>"
                                                    data-bs-toggle="tooltip" title="Editar examen">
-                                                    <i class="bi bi-pencil"></i>
+                                                    <i class="bi bi-pencil me-1"></i>Editar
                                                 </a>
-                                                <a class="btn btn-sm btn-outline-danger" href="index.php?c=exam&a=delete&id=<?= $exam['id'] ?>"
-                                                   onclick="return confirm('¿Eliminar paciente?');"
+                                                <a class="btn btn-sm btn-danger" href="index.php?c=exam&a=delete&id=<?= $exam['id'] ?>"
+                                                   onclick="return confirm('¿Está seguro de eliminar el examen de <?= htmlspecialchars($exam['candidate_name']) ?>? Esta acción no se puede deshacer.');"
                                                    data-bs-toggle="tooltip" title="Eliminar examen">
-                                                    <i class="bi bi-trash"></i>
+                                                    <i class="bi bi-trash me-1"></i>Eliminar
                                                 </a>
                                             </div>
                                         </td>
@@ -146,5 +152,15 @@
         </div>
     </div>
 </div>
+
+<script>
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
 
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

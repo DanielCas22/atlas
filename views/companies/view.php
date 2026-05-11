@@ -89,8 +89,12 @@
                             ?></td>
                             <td><?= htmlspecialchars($exam['order_number'] ?? '') ?></td>
                             <td>
-                                <a class="btn btn-warning" style="background:#e0e0e0;color:#000;text-decoration:underline;padding:2px 8px;border-radius:4px;margin-right:2px;" href="index.php?c=exam&a=edit&id=<?= $exam['id'] ?>"><i class="bi bi-pencil"></i> <u>Editar</u></a>
-                                <a class="btn btn-danger" style="background:#d98880;color:#000;text-decoration:underline;padding:2px 8px;border-radius:4px;" href="index.php?c=exam&a=delete&id=<?= $exam['id'] ?>" onclick="return confirm('¿Eliminar paciente?');"><i class="bi bi-trash"></i> <u>Eliminar</u></a>
+                                <a class="btn btn-sm btn-warning me-2" href="index.php?c=exam&a=edit&id=<?= $exam['id'] ?>">
+                                    <i class="bi bi-pencil me-1"></i>Editar
+                                </a>
+                                <a class="btn btn-sm btn-danger" href="index.php?c=exam&a=delete&id=<?= $exam['id'] ?>" onclick="return confirm('¿Eliminar paciente?');">
+                                    <i class="bi bi-trash me-1"></i>Eliminar
+                                </a>
                             </td>
                         </tr>
                     <?php endforeach; ?>

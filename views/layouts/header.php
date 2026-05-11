@@ -95,6 +95,33 @@ $isLoginPage = isset($_GET['c'], $_GET['a']) && $_GET['c'] === 'auth' && $_GET['
                 display: none;
             }
         }
+
+        .scroll-top-btn {
+            position: fixed;
+            right: 1rem;
+            bottom: 1rem;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0.75rem 1.5rem rgba(13, 110, 253, 0.2);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            opacity: 0;
+            visibility: hidden;
+            z-index: 1050;
+        }
+
+        .scroll-top-btn.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .scroll-top-btn:hover {
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>

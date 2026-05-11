@@ -363,7 +363,60 @@ class DashboardController
     private function normalizeClassifiedCompanyName(string $companyName)
     {
         $clean = preg_replace('/^LISTADO[ _-]*/iu', '', $companyName);
+        $clean = str_replace('_', ' ', $clean);
+        $clean = preg_replace('/\s+/', ' ', $clean);
         return trim($clean);
+    }
+
+    public function cleanClassifiedCompanies()
+    {
+        $this->ensureAuth();
+
+        $baseDir = __DIR__ . '/../empresas_clasificadas';
+        if (!is_dir($baseDir)) {
+            header('Location: index.php?c=dashboard&a=files&error=' . urlencode('El directorio de empresas clasificadas no existe.'));
+            exit;
+        }
+
+        $renamed = 0;
+        $errors = [];
+        $companyDirs = scandir($baseDir);
+
+        foreach ($companyDirs as $companyDir) {
+            if ($companyDir === '.' || $companyDir === '..') {
+                continue;
+            }
+
+            $companyPath = $baseDir . '/' . $companyDir;
+            if (!is_dir($companyPath)) {
+                continue;
+            }
+
+            $cleanName = $this->normalizeClassifiedCompanyName($companyDir);
+            if ($cleanName === '' || $cleanName === $companyDir) {
+                continue;
+            }
+
+            $targetPath = $baseDir . '/' . $cleanName;
+            if (is_dir($targetPath)) {
+                $errors[] = "La carpeta ya existe: $cleanName";
+                continue;
+            }
+
+            if (rename($companyPath, $targetPath)) {
+                $renamed++;
+            } else {
+                $errors[] = "No se pudo renombrar: $companyDir";
+            }
+        }
+
+        $message = "Nombres limpiados. Carpetas renombradas: $renamed.";
+        if (!empty($errors)) {
+            $message .= ' Errores: ' . implode(' / ', $errors);
+        }
+
+        header('Location: index.php?c=dashboard&a=files&success=' . urlencode($message));
+        exit;
     }
 
     public function download()
@@ -400,9 +453,22 @@ class DashboardController
         }
 
         // Enviar el archivo
+        if (ob_get_level()) {
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+        }
+
+        header('Content-Description: File Transfer');
         header('Content-Type: application/octet-stream');
         header('Content-Disposition: attachment; filename="' . basename($file) . '"');
+        header('Content-Transfer-Encoding: binary');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
         header('Content-Length: ' . filesize($filePath));
+
+        flush();
         readfile($filePath);
         exit;
     }
@@ -516,6 +582,66 @@ class DashboardController
         } else {
             header('Location: index.php?c=dashboard&a=files&error=' . urlencode('No se pudo eliminar ningún archivo. ' . implode(', ', $errors)));
         }
+        exit;
+    }
+
+    public function deleteAllClassifiedFiles()
+    {
+        $this->ensureAuth();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?c=dashboard&a=files&error=Solicitud inválida');
+            exit;
+        }
+
+        $baseDir = __DIR__ . '/../empresas_clasificadas';
+        if (!is_dir($baseDir)) {
+            header('Location: index.php?c=dashboard&a=files&error=' . urlencode('El directorio de archivos clasificados no existe.'));
+            exit;
+        }
+
+        $deletedCount = 0;
+        $errors = [];
+
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($baseDir, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+
+        foreach ($iterator as $item) {
+            if ($item->isFile()) {
+                $realPath = $item->getRealPath();
+                if ($realPath === false) {
+                    $errors[] = 'Archivo inaccesible';
+                    continue;
+                }
+
+                // Verificar que esté dentro de la carpeta base para evitar rutas maliciosas
+                $realBaseDir = realpath($baseDir);
+                if (strpos($realPath, $realBaseDir) !== 0) {
+                    $errors[] = 'Acceso denegado a ' . basename($realPath);
+                    continue;
+                }
+
+                if (!is_writable($realPath)) {
+                    $errors[] = 'No se puede escribir en ' . basename($realPath);
+                    continue;
+                }
+
+                if (unlink($realPath)) {
+                    $deletedCount++;
+                } else {
+                    $errors[] = 'Error eliminando ' . basename($realPath);
+                }
+            }
+        }
+
+        $message = "Se eliminaron $deletedCount archivo(s) correctamente.";
+        if (!empty($errors)) {
+            $message .= ' Errores: ' . implode(', ', $errors);
+        }
+
+        header('Location: index.php?c=dashboard&a=files&success=' . urlencode($message));
         exit;
     }
 
@@ -697,8 +823,8 @@ class DashboardController
                 }
             }
             
-            // Generar nombre del archivo con fecha
-            $fileName = 'REPORTE_' . $fechaHoy . '.xlsx';
+            // Generar nombre del archivo con el nombre de la empresa y la fecha
+            $fileName = $safeName . '_' . $fechaHoy . '.xlsx';
             $filePath = $reportDir . '/' . $fileName;
             
             // Generar archivo Excel con los pacientes

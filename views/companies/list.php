@@ -86,7 +86,7 @@
                         <h5 class="mb-0 fw-semibold">
                             <i class="bi bi-list-ul me-2"></i>
                             Empresas Registradas
-                            <span class="badge bg-primary ms-2"><?= count($companies) ?></span>
+                            <span class="badge bg-primary text-white ms-2"><?= count($companies) ?></span>
                         </h5>
                         <small class="text-muted">
                             <?php if (!empty($_GET['search'])): ?>
@@ -149,25 +149,25 @@
                                             </div>
                                         </td>
                                         <td class="text-center">
-                                            <span class="badge bg-info fs-6 px-3 py-2">
+                                            <span class="badge bg-info text-white fs-6 px-3 py-2">
                                                 <i class="bi bi-clipboard-check me-1"></i>
                                                 <?= $company['exam_count'] ?>
                                             </span>
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group" role="group">
-                                                <a class="btn btn-sm btn-outline-primary" href="index.php?c=company&a=view&id=<?= $company['id'] ?>"
+                                                <a class="btn btn-sm btn-primary" href="index.php?c=company&a=view&id=<?= $company['id'] ?>"
                                                    data-bs-toggle="tooltip" title="Ver detalles">
-                                                    <i class="bi bi-eye"></i>
+                                                    <i class="bi bi-eye me-1"></i>Ver
                                                 </a>
-                                                <a class="btn btn-sm btn-outline-warning" href="index.php?c=company&a=edit&id=<?= $company['id'] ?>"
+                                                <a class="btn btn-sm btn-warning" href="index.php?c=company&a=edit&id=<?= $company['id'] ?>"
                                                    data-bs-toggle="tooltip" title="Editar empresa">
-                                                    <i class="bi bi-pencil"></i>
+                                                    <i class="bi bi-pencil me-1"></i>Editar
                                                 </a>
-                                                <a class="btn btn-sm btn-outline-danger" href="index.php?c=company&a=delete&id=<?= $company['id'] ?>"
+                                                <a class="btn btn-sm btn-danger" href="index.php?c=company&a=delete&id=<?= $company['id'] ?>"
                                                    onclick="return confirm('¿Está seguro de eliminar esta empresa?');"
                                                    data-bs-toggle="tooltip" title="Eliminar empresa">
-                                                    <i class="bi bi-trash"></i>
+                                                    <i class="bi bi-trash me-1"></i>Eliminar
                                                 </a>
                                             </div>
                                         </td>

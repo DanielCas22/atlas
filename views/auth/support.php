@@ -15,7 +15,7 @@
                     <p style="margin-bottom: 1rem;"><a href="https://mail.google.com/mail/u/0/?tab=rm&ogbl#inbox?compose=jrjtXFCKppcXRGMkvqqDSFmdDFNBMtmftgCgXtGVsnqtdWslWPjxHCNxcPZvvxfhMbnwMGjx" target="_blank" style="color: #fff; text-decoration: underline;">angeldb20052@gmail.com</a></p>
 
                     <p style="margin-bottom: 0.8rem; font-weight: 600;">Teléfono / WhatsApp:</p>
-                    <p style="margin-bottom: 1rem;"><a href="https://w.app/fubhu7" target="_blank" style="color: #fff; text-decoration: underline;">+57 321-955-8545</a></p>
+                    <p style="margin-bottom: 1rem;"><a href="https://wa.me/573219558545?text=Hola,%20solicito%20ayuda%20con%20el%20aplicativo:%20" target="_blank" style="color: #fff; text-decoration: underline;">+57 321-955-8545</a></p>
 
                     <p style="margin-bottom: 0.8rem; font-weight: 600;">Horario de atención:</p>
                     <p style="margin-bottom: 0.25rem;">Lunes - Viernes: 7:00 am - 2:30 pm</p>
