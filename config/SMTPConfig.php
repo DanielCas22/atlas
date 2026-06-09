@@ -123,8 +123,17 @@ class SMTPConfig
             return false;
         }
 
-        // Validar que host y port no estén vacíos
-        return !empty($config['host']) && !empty($config['port']);
+        if (empty($config['host']) || empty($config['port'])) {
+            return false;
+        }
+
+        $provider = self::getProvider();
+        if (in_array($provider, ['gmail', 'sendgrid'], true)) {
+            return !empty($config['username']) && !empty($config['password']);
+        }
+
+        // Mailtrap y otros proveedores sin credenciales opcionales pueden funcionar con host/port únicamente
+        return true;
     }
 }
 ?>

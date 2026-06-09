@@ -8,7 +8,43 @@ class DashboardController
 
         $user = $_SESSION['user'];
         $examModel = new ExamModel();
+        $companyModel = new CompanyModel();
+        $userModel = new UserModel();
+
         $exams = $examModel->all();
+        $companyCount = $companyModel->countAll();
+        $examCount = $examModel->countAll();
+        $userCount = $userModel->countAll();
+
+        $classifiedCompanies = 0;
+        $reportFiles = 0;
+        $baseDir = __DIR__ . '/../empresas_clasificadas';
+        if (is_dir($baseDir)) {
+            foreach (scandir($baseDir) as $companyDir) {
+                if ($companyDir === '.' || $companyDir === '..') {
+                    continue;
+                }
+
+                $companyPath = $baseDir . '/' . $companyDir;
+                if (!is_dir($companyPath)) {
+                    continue;
+                }
+
+                $classifiedCompanies++;
+                $reportDir = $companyPath . '/REPORTE GUARDA';
+                if (is_dir($reportDir)) {
+                    foreach (scandir($reportDir) as $file) {
+                        if ($file === '.' || $file === '..') {
+                            continue;
+                        }
+                        $filePath = $reportDir . '/' . $file;
+                        if (is_file($filePath)) {
+                            $reportFiles++;
+                        }
+                    }
+                }
+            }
+        }
 
         include __DIR__ . '/../views/dashboard/index.php';
     }
@@ -21,6 +57,24 @@ class DashboardController
         $users = $userModel->all();
 
         include __DIR__ . '/../views/dashboard/users.php';
+    }
+
+    public function estadisticas()
+    {
+        $this->ensureAuth();
+
+        $examModel = new ExamModel();
+        $companyModel = new CompanyModel();
+
+        $totalExams = $examModel->countAll();
+        $registeredCompanies = $companyModel->countAll();
+        $activeCompanies = $companyModel->countCompaniesWithExams();
+        $resultSummary = $examModel->getResultSummary();
+        $statusSummary = $examModel->getStatusSummary();
+        $topCompanies = $examModel->getTopCompaniesByExams(5);
+        $topExamTypes = $examModel->getTopExamTypes(5);
+
+        include __DIR__ . '/../views/dashboard/estadisticas.php';
     }
 
     private function getRoleOptions()
@@ -302,6 +356,7 @@ class DashboardController
 
         $baseDir = __DIR__ . '/../empresas_clasificadas';
         $companies = [];
+        $processedDirs = []; // Rastrear directorios procesados
 
         if (is_dir($baseDir)) {
             $companyDirs = scandir($baseDir);
@@ -312,6 +367,13 @@ class DashboardController
                 if (!is_dir($companyPath)) {
                     continue;
                 }
+
+                // Evitar procesar la misma carpeta normalizada dos veces
+                $normalizedDir = $companyModel->normalizeCompanyName($companyDir);
+                if (in_array($normalizedDir, $processedDirs)) {
+                    continue;
+                }
+                $processedDirs[] = $normalizedDir;
 
                 $displayName = $this->normalizeClassifiedCompanyName($companyDir);
                 if ($displayName === '') {
@@ -329,28 +391,24 @@ class DashboardController
                     'folders' => []
                 ];
 
-                $subDirs = scandir($companyPath);
-                foreach ($subDirs as $subDir) {
-                    if ($subDir === '.' || $subDir === '..') continue;
+                // Solo buscar carpeta REPORTE GUARDA
+                $reportGuardaPath = $companyPath . '/REPORTE GUARDA';
+                if (is_dir($reportGuardaPath)) {
+                    $companies[$displayName]['company_dirs'][$companyDir]['folders']['REPORTE GUARDA'] = [
+                        'files' => []
+                    ];
 
-                    $subPath = $companyPath . '/' . $subDir;
-                    if (is_dir($subPath)) {
-                        $companies[$displayName]['company_dirs'][$companyDir]['folders'][$subDir] = [
-                            'files' => []
-                        ];
+                    $files = scandir($reportGuardaPath);
+                    foreach ($files as $file) {
+                        if ($file === '.' || $file === '..') continue;
 
-                        $files = scandir($subPath);
-                        foreach ($files as $file) {
-                            if ($file === '.' || $file === '..') continue;
-
-                            $filePath = $subPath . '/' . $file;
-                            if (is_file($filePath)) {
-                                $companies[$displayName]['company_dirs'][$companyDir]['folders'][$subDir]['files'][] = [
-                                    'name' => $file,
-                                    'size' => filesize($filePath),
-                                    'modified' => date('d/m/Y H:i', filemtime($filePath))
-                                ];
-                            }
+                        $filePath = $reportGuardaPath . '/' . $file;
+                        if (is_file($filePath)) {
+                            $companies[$displayName]['company_dirs'][$companyDir]['folders']['REPORTE GUARDA']['files'][] = [
+                                'name' => $file,
+                                'size' => filesize($filePath),
+                                'modified' => date('d/m/Y H:i', filemtime($filePath))
+                            ];
                         }
                     }
                 }
@@ -790,6 +848,30 @@ class DashboardController
         return false;
     }
 
+    private function findExistingCompanyDirectory(string $companyName, string $baseDir)
+    {
+        $companyModel = new CompanyModel();
+        $normalizedTarget = $companyModel->normalizeCompanyName($companyName);
+
+        foreach (scandir($baseDir) as $folder) {
+            if ($folder === '.' || $folder === '..') {
+                continue;
+            }
+
+            $path = $baseDir . '/' . $folder;
+            if (!is_dir($path) || $folder === 'REPORTE GUARDA') {
+                continue;
+            }
+
+            $normalizedFolder = $companyModel->normalizeCompanyName($folder);
+            if ($normalizedFolder === $normalizedTarget) {
+                return $folder;
+            }
+        }
+
+        return null;
+    }
+
     private function createCompanyFolders($companiesData)
     {
         $baseDir = __DIR__ . '/../empresas_clasificadas';
@@ -801,22 +883,25 @@ class DashboardController
             }
         }
         
-        // Fecha actual para el archivo
+        $companyModel = new CompanyModel();
         $fechaHoy = date('d_m_Y');
         
         // Crear carpeta para cada empresa
         foreach ($companiesData as $company => $patients) {
-            $safeName = $this->sanitizeFileName($company);
-            $companyDir = $baseDir . '/' . $safeName;
-            $reportDir = $companyDir . '/REPORTE GUARDA';
-            
-            // Crear directorios
-            if (!is_dir($companyDir)) {
-                if (!@mkdir($companyDir, 0777, true)) {
-                    throw new Exception("No se puede crear la carpeta de empresa: $company");
+            $existingDir = $this->findExistingCompanyDirectory($company, $baseDir);
+            if ($existingDir !== null) {
+                $companyDir = $baseDir . '/' . $existingDir;
+            } else {
+                $folderName = $companyModel->sanitizeCompanyFolderName($company);
+                $companyDir = $baseDir . '/' . $folderName;
+                if (!is_dir($companyDir)) {
+                    if (!@mkdir($companyDir, 0777, true)) {
+                        throw new Exception("No se puede crear la carpeta de empresa: $company");
+                    }
                 }
             }
-            
+
+            $reportDir = $companyDir . '/REPORTE GUARDA';
             if (!is_dir($reportDir)) {
                 if (!@mkdir($reportDir, 0777, true)) {
                     throw new Exception("No se puede crear la carpeta REPORTE GUARDA para: $company");
@@ -824,7 +909,7 @@ class DashboardController
             }
             
             // Generar nombre del archivo con el nombre de la empresa y la fecha
-            $fileName = $safeName . '_' . $fechaHoy . '.xlsx';
+            $fileName = $this->sanitizeFileName($company) . '_' . $fechaHoy . '.xlsx';
             $filePath = $reportDir . '/' . $fileName;
             
             // Generar archivo Excel con los pacientes

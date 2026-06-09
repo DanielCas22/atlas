@@ -413,9 +413,12 @@ class ExamController
                 $isPhone = preg_match('/^(3\d{7,9}|\d{7,13})$/', $clean);
                 $isStatus = preg_match('/\b(sin\s+resultado|apto|no\s+apto|reprobado|finalizado|completado|aplazado)\b/i', $part);
                 $isOrder = preg_match('/^\d{3,}$/', $clean);
-                $isSkipToken = preg_match('/\b(colombia|bogota|d\.c|activo|inactivo|usuarios?)\b/i', $part);
+                // Palabras comunes en direcciones - EXPANDIDO para capturar mejor los nombres de lugares
+                // Incluye artículos (LA, EL, LOS, LAS), palabras de dirección y barrios comunes
+                $isSkipToken = preg_match('/\b(la|el|los|las|colombia|bogota|d\.c|activo|inactivo|usuarios?|barrio|conjunto|calle|carrera|diagonal|transversal|avenida|manzana|lote|edificio|piso|villa|casa|pent|bloque|sector|vereda|corregimiento|municipio|provincia|localidad|zona|región|estado|país|ciudad|ap|pcia|depto|dept|decad|humano|suba|chapinero|usaquen|la\s+candelaria|san\s+cristobal|engativa|puente|aranda|teusaquillo|santa\s+fe|los\s+mártires|antonio|nariño|rafael|uribe|libertadores|jerusalen|kennedy|fontibón|bosa|tunjuelito)\b/i', $part);
 
-                if ($isEmail || $isDate || $isGender || $isPhone || $isStatus || $isOrder || $isSkipToken || ($clean !== '' && preg_match('/^\d+$/', $part) && strlen($part) <= 3)) {
+                // Limitar nombre a máximo 4 tokens para evitar capturar direcciones
+                if (count($nameParts) >= 4 || $isEmail || $isDate || $isGender || $isPhone || $isStatus || $isOrder || $isSkipToken || ($clean !== '' && preg_match('/^\d+$/', $part) && strlen($part) <= 3)) {
                     break;
                 }
 
@@ -484,21 +487,21 @@ class ExamController
             }
             $status = $foundStatus;
 
-            // 5) Orden numérico al final (>= 3 dígitos y distinto de documento)
+            // 5) Teléfono (ANTES que orden para evitar que se capture como número de orden)
             foreach ($parts as $idx => $part) {
                 $clean = preg_replace('/\D/', '', $part);
-                if (!$order_number && preg_match('/^\d{3,}$/', $clean) && $clean !== $document_number) {
-                    $order_number = $clean;
+                if (!$phone && preg_match('/^(3\d{7,9}|\d{7,10})$/', $clean)) {
+                    $phone = $clean;
                     unset($parts[$idx]);
                     break;
                 }
             }
 
-            // 6) Teléfono
+            // 6) Orden numérico al final (>= 3 dígitos y distinto de documento y teléfono)
             foreach ($parts as $idx => $part) {
                 $clean = preg_replace('/\D/', '', $part);
-                if (!$phone && preg_match('/^(3\d{7,9}|\d{7,10})$/', $clean)) {
-                    $phone = $clean;
+                if (!$order_number && preg_match('/^\d{3,}$/', $clean) && $clean !== $document_number && $clean !== $phone) {
+                    $order_number = $clean;
                     unset($parts[$idx]);
                     break;
                 }
@@ -628,21 +631,33 @@ class ExamController
             'phone' => ['telefono', 'teléfono', 'phone', 'celular', 'mobile'],
             'gender' => ['genero', 'género', 'sexo', 'gender', 'sex'],
             'birth_date' => ['fecha_nacimiento', 'nacimiento', 'birth_date', 'birthdate'],
-            'exam_date' => ['fecha_examen', 'fecha_de_examen', 'exam_date', 'fecha', 'date'],
-            'status' => ['estado', 'status', 'resultado', 'result'],
-            'order_number' => ['orden', 'numero_orden', 'order_number', 'order']
+            'exam_date' => ['fecha_examen', 'fecha_de_examen', 'fecha_creacion', 'exam_date', 'fecha', 'date'],
+            'status' => ['resultado', 'result', 'estado', 'status'],
+            'order_number' => ['consecutivo_bolsa', 'consecutivo', 'orden', 'numero_orden', 'order_number', 'order']
         ];
 
         $colMap = [];
-        foreach ($headers as $col => $header) {
-            foreach ($mapping as $key => $labels) {
+        foreach ($mapping as $key => $labels) {
+            $bestScore = 0;
+            $bestCol = null;
+            foreach ($headers as $col => $header) {
                 foreach ($labels as $label) {
-                    if ($header === $label || strpos($header, $label) !== false) {
-                        if (!isset($colMap[$key])) {
-                            $colMap[$key] = $col;
-                        }
+                    if ($header === $label) {
+                        $score = 300 + strlen($label);
+                    } elseif (strpos($header, $label) !== false) {
+                        $score = 100 + strlen($label);
+                    } else {
+                        continue;
+                    }
+
+                    if ($score > $bestScore) {
+                        $bestScore = $score;
+                        $bestCol = $col;
                     }
                 }
+            }
+            if ($bestCol !== null) {
+                $colMap[$key] = $bestCol;
             }
         }
 

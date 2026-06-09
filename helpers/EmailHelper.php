@@ -179,6 +179,15 @@ TEXT;
      */
     public static function testConnection()
     {
+        $autoloadPath = __DIR__ . '/../vendor/autoload.php';
+        if (file_exists($autoloadPath)) {
+            require_once $autoloadPath;
+        }
+
+        if (!class_exists('PHPMailer\PHPMailer\PHPMailer')) {
+            return ['success' => false, 'message' => 'PHPMailer no está instalado'];
+        }
+
         $config = SMTPConfig::getConfig();
         if (!$config) {
             return ['success' => false, 'message' => 'SMTP no está habilitado'];

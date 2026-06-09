@@ -254,15 +254,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     </tr>
                     <tr>
                         <td>Host</td>
-                        <td><code><?= SMTPConfig::{strtoupper(SMTPConfig::PROVIDER) . '_HOST'} ?? 'N/A' ?></code></td>
+                        <td><code><?= constant('SMTPConfig::' . strtoupper(SMTPConfig::PROVIDER) . '_HOST') ?? 'N/A' ?></code></td>
                     </tr>
                     <tr>
                         <td>Puerto</td>
-                        <td><?= SMTPConfig::{strtoupper(SMTPConfig::PROVIDER) . '_PORT'} ?? 'N/A' ?></td>
+                        <td><?= constant('SMTPConfig::' . strtoupper(SMTPConfig::PROVIDER) . '_PORT') ?? 'N/A' ?></td>
                     </tr>
                     <tr>
                         <td>Usuario</td>
-                        <td><code><?= SMTPConfig::{strtoupper(SMTPConfig::PROVIDER) . '_USERNAME'} ?? 'N/A' ?></code></td>
+                        <td><code><?= constant('SMTPConfig::' . strtoupper(SMTPConfig::PROVIDER) . '_USERNAME') ?? 'N/A' ?></code></td>
                     </tr>
                     <tr>
                         <td>Remitente</td>

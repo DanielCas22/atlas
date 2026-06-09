@@ -103,8 +103,10 @@ class AuthController
                         $sentByEmail = true;
                     } else {
                         if ($user) {
-                            error_log('Fallo al enviar email de recuperación a: ' . $email);
-                            $error = 'No se pudo enviar el correo de recuperación. Revisa la configuración SMTP y prueba nuevamente.';
+                            $debugResult = EmailHelper::testConnection();
+                            $smtpError = $debugResult['message'] ?? 'Error SMTP desconocido';
+                            error_log('Fallo al enviar email de recuperación a: ' . $email . ' - ' . $smtpError);
+                            $error = 'No se pudo enviar el correo de recuperación. ' . $smtpError . ' Revisa la configuración SMTP y prueba nuevamente.';
                         } else {
                             // Por seguridad, no revelar si el email existe
                             $success = 'Si ese email está registrado, recibirás un enlace de recuperación.';

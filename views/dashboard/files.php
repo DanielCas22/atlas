@@ -29,11 +29,17 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
-    </form>
     <div class="row mb-4">
         <div class="col-md-6">
             <div class="input-group">
-                <input type="text" id="searchInput" class="form-control" placeholder="Buscar empresa...">
+                <span class="input-group-text bg-dark border-dark text-white"><i class="bi bi-search"></i></span>
+                <input type="text" id="searchInput" class="form-control" placeholder="Buscar empresa, carpeta o archivo...">
+                <button type="button" id="clearSearchBtn" class="btn btn-outline-secondary" title="Borrar búsqueda">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div id="noResultsMessage" class="alert alert-warning mt-3 d-none" role="alert">
+                <i class="bi bi-exclamation-circle me-2"></i>No se encontraron resultados para la búsqueda.
             </div>
         </div>
         <div class="col-md-6 text-end">
@@ -257,18 +263,32 @@ function confirmDelete(company, folder, file) {
 }
 
 // Función de búsqueda
-document.getElementById('searchInput').addEventListener('input', function() {
-    const searchTerm = this.value.toLowerCase();
+const searchInput = document.getElementById('searchInput');
+const clearSearchBtn = document.getElementById('clearSearchBtn');
+const noResultsMessage = document.getElementById('noResultsMessage');
+
+function filterCompanyCards() {
+    const searchTerm = searchInput.value.trim().toLowerCase();
     const companyCards = document.querySelectorAll('.company-card');
-    
+    let visibleCount = 0;
+
     companyCards.forEach(card => {
         const companyName = card.getAttribute('data-company');
-        if (companyName.includes(searchTerm)) {
-            card.style.display = '';
-        } else {
-            card.style.display = 'none';
-        }
+        const content = card.textContent.toLowerCase();
+        const isMatch = searchTerm === '' || companyName.includes(searchTerm) || content.includes(searchTerm);
+
+        card.style.display = isMatch ? '' : 'none';
+        if (isMatch) visibleCount++;
     });
+
+    noResultsMessage.classList.toggle('d-none', visibleCount > 0);
+}
+
+searchInput.addEventListener('input', filterCompanyCards);
+clearSearchBtn.addEventListener('click', function() {
+    searchInput.value = '';
+    filterCompanyCards();
+    searchInput.focus();
 });
 
 // Seleccionar/deseleccionar todo

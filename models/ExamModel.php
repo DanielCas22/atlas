@@ -13,6 +13,59 @@ class ExamModel extends BaseModel
         return $this->db->query($sql)->fetchAll();
     }
 
+    public function countAll()
+    {
+        $stmt = $this->db->query('SELECT COUNT(*) as total FROM exams');
+        $row = $stmt->fetch();
+        return intval($row['total'] ?? 0);
+    }
+
+    public function getStatusSummary()
+    {
+        $sql = 'SELECT status, COUNT(*) as total FROM exams GROUP BY status';
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll();
+    }
+
+    public function getResultSummary()
+    {
+        $sql = 'SELECT
+                    SUM(status = "FINALIZADO") as aptos,
+                    SUM(status = "RECHAZADO") as no_aptos,
+                    SUM(status = "PENDIENTE") as pendientes,
+                    SUM(status = "EN_CURSO") as en_curso,
+                    SUM(status = "SIN_RESULTADO") as sin_resultado
+                FROM exams';
+        $stmt = $this->db->query($sql);
+        return $stmt->fetch();
+    }
+
+    public function getTopCompaniesByExams($limit = 5)
+    {
+        $sql = 'SELECT sc.name as company_name, COUNT(*) as exams_count
+                FROM exams e
+                JOIN security_companies sc ON e.company_id = sc.id
+                GROUP BY sc.id, sc.name
+                ORDER BY exams_count DESC
+                LIMIT ?';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll();
+    }
+
+    public function getTopExamTypes($limit = 5)
+    {
+        $sql = 'SELECT et.name as exam_type_name, COUNT(*) as exams_count
+                FROM exams e
+                JOIN exam_types et ON e.exam_type_id = et.id
+                GROUP BY et.id, et.name
+                ORDER BY exams_count DESC
+                LIMIT ?';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$limit]);
+        return $stmt->fetchAll();
+    }
+
     public function allWithDetails()
     {
         $sql = 'SELECT e.id, sc.name as company_name, et.name as exam_type_name, e.candidate_name, e.document_number, e.phone, e.gender, e.birth_date, e.exam_date, e.order_number, e.status, e.created_at, e.updated_at

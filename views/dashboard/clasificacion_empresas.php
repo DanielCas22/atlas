@@ -11,6 +11,9 @@
                     </h1>
                     <p class="lead mb-0" style="color:#fff;">Carga un archivo Excel para registrar y clasificar candidatos por empresa</p>
                 </div>
+                <a href="index.php?c=dashboard&a=index" class="btn btn-outline-light btn-lg">
+                    <i class="bi bi-house-fill me-2"></i>Ir al Inicio
+                </a>
             </div>
         </div>
     </div>

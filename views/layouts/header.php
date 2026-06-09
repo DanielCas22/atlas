@@ -179,6 +179,10 @@ $isLoginPage = isset($_GET['c'], $_GET['a']) && $_GET['c'] === 'auth' && $_GET['
                                 <i class="bi bi-diagram-3 text-danger me-2"></i>
                                 <span>Clasificar por Empresa</span>
                             </a>
+                            <a class="dropdown-item py-2" href="index.php?c=dashboard&a=estadisticas">
+                                <i class="bi bi-bar-chart-line text-danger me-2"></i>
+                                <span>Datos y Estadísticas</span>
+                            </a>
                         </div>
 
                         <!-- Usuarios -->

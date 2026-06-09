@@ -26,6 +26,20 @@ class CompanyModel extends BaseModel
         return $companies;
     }
 
+    public function countAll()
+    {
+        $stmt = $this->db->query('SELECT COUNT(*) as total FROM security_companies');
+        $row = $stmt->fetch();
+        return intval($row['total'] ?? 0);
+    }
+
+    public function countCompaniesWithExams()
+    {
+        $stmt = $this->db->query('SELECT COUNT(DISTINCT company_id) as total FROM exams');
+        $row = $stmt->fetch();
+        return intval($row['total'] ?? 0);
+    }
+
     public function normalizeCompanyName(string $name)
     {
         // Eliminar prefijos como LISTADO

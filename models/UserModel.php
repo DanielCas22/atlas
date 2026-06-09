@@ -22,6 +22,13 @@ class UserModel extends BaseModel
         return $stmt->fetchAll();
     }
 
+    public function countAll()
+    {
+        $stmt = $this->db->query('SELECT COUNT(*) as total FROM users');
+        $row = $stmt->fetch();
+        return intval($row['total'] ?? 0);
+    }
+
     public function update(int $id, array $data)
     {
         $fields = [];

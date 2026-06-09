@@ -1,1 +1,112 @@
 [2026-05-11 20:39:05] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":426,"exam_type_id":4,"candidates_count":36,"order_number":"222"}
+[2026-05-12 18:04:38] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":429,"exam_type_id":4,"candidates_count":11,"order_number":"1015657"}
+[2026-05-12 18:06:07] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":38,"candidate_name":"JUAN DIEGO PISO REALPE"}
+[2026-05-12 18:06:07] [INFO] Exams list displayed | Context: {"count":11}
+[2026-05-12 18:21:45] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":406,"exam_type_id":4,"candidates_count":9,"order_number":"1016376"}
+[2026-05-12 19:00:35] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":382,"exam_type_id":4,"candidates_count":19,"order_number":"1014897"}
+[2026-05-12 19:02:27] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":58,"candidate_name":"JAVIER RICARDO HERNANDEZ HERNANDEZ VIRREY"}
+[2026-05-12 19:02:27] [INFO] Exams list displayed | Context: {"count":39}
+[2026-05-12 19:03:01] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":60,"candidate_name":"OSCAR  JAVIER DAZA MARIN"}
+[2026-05-12 19:03:01] [INFO] Exams list displayed | Context: {"count":39}
+[2026-05-12 19:03:45] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":61,"candidate_name":"WILMER ALEXANDER DELGADO GARCIA"}
+[2026-05-12 19:03:45] [INFO] Exams list displayed | Context: {"count":39}
+[2026-05-12 19:04:18] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":59,"candidate_name":"OSCAR LUIS OSORIO HERNANDEZ"}
+[2026-05-12 19:04:18] [INFO] Exams list displayed | Context: {"count":39}
+[2026-05-12 19:29:35] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":375,"exam_type_id":4,"candidates_count":16,"order_number":"1024059"}
+[2026-05-12 19:30:39] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":82,"candidate_name":"EDUARDO JOSE VIDES CORDOBA"}
+[2026-05-12 19:30:39] [INFO] Exams list displayed | Context: {"count":55}
+[2026-05-12 19:30:44] [INFO] Exams list displayed | Context: {"count":55}
+[2026-05-12 19:48:17] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":351,"exam_type_id":4,"candidates_count":28,"order_number":"1033749"}
+[2026-05-12 19:48:17] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":351,"exam_type_id":4,"candidates_count":28,"order_number":"1033749"}
+[2026-05-12 19:49:28] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":351,"exam_type_id":4,"candidates_count":28,"order_number":"1033749"}
+[2026-05-12 19:50:19] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":149,"candidate_name":"DUBAN OCTAVIO BARRERA RUIZ"}
+[2026-05-12 19:50:19] [INFO] Exams list displayed | Context: {"count":83}
+[2026-05-12 19:50:23] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":149,"candidate_name":"DUBAN OCTAVIO BARRERA RUIZ"}
+[2026-05-12 19:50:24] [INFO] Exams list displayed | Context: {"count":83}
+[2026-05-12 19:51:04] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":156,"candidate_name":"EDUAR ARMANDO FAJARDO SAENZ"}
+[2026-05-12 19:51:04] [INFO] Exams list displayed | Context: {"count":83}
+[2026-05-12 19:51:29] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":160,"candidate_name":"MANUEL ENRIQUE DAMIAN TERAN"}
+[2026-05-12 19:51:29] [INFO] Exams list displayed | Context: {"count":83}
+[2026-05-12 19:51:56] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":151,"candidate_name":"OLIBERTO SANCHEZ BONILLA"}
+[2026-05-12 19:51:56] [INFO] Exams list displayed | Context: {"count":83}
+[2026-05-12 20:31:30] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":406,"exam_type_id":4,"candidates_count":3,"order_number":"1037739"}
+[2026-05-12 21:06:23] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":404,"exam_type_id":4,"candidates_count":50,"order_number":"1063566"}
+[2026-05-12 21:07:57] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":216,"candidate_name":"ANGY PAOLA CHAPARRO MALDONADO"}
+[2026-05-12 21:07:57] [INFO] Exams list displayed | Context: {"count":136}
+[2026-05-12 21:08:44] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":214,"candidate_name":"ROGELIO MORA BARAHONA"}
+[2026-05-12 21:08:44] [INFO] Exams list displayed | Context: {"count":136}
+[2026-05-13 15:54:04] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":410,"exam_type_id":4,"candidates_count":51,"order_number":"105"}
+[2026-05-13 15:54:04] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":410,"exam_type_id":4,"candidates_count":51,"order_number":"105"}
+[2026-05-13 15:54:04] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":410,"exam_type_id":4,"candidates_count":51,"order_number":"105"}
+[2026-05-13 15:54:38] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":410,"exam_type_id":4,"candidates_count":51,"order_number":"105"}
+[2026-05-13 15:55:54] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":399,"candidate_name":"RUBEN CAICEDO NI\u00d1O"}
+[2026-05-13 15:55:54] [INFO] Exams list displayed | Context: {"count":187}
+[2026-05-13 15:56:30] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":385,"candidate_name":"FERNANDO MANRIQUE TORRES"}
+[2026-05-13 15:56:30] [INFO] Exams list displayed | Context: {"count":187}
+[2026-05-13 15:57:14] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":398,"candidate_name":"WILFREDY FRANCO"}
+[2026-05-13 15:57:14] [INFO] Exams list displayed | Context: {"count":187}
+[2026-05-13 15:58:19] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":386,"candidate_name":"DIEGO ALEXANDER RINCON PACHON"}
+[2026-05-13 15:58:19] [INFO] Exams list displayed | Context: {"count":187}
+[2026-05-13 16:00:52] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":387,"candidate_name":"HERMES TIQUE YARA"}
+[2026-05-13 16:00:52] [INFO] Exams list displayed | Context: {"count":187}
+[2026-05-13 16:02:46] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":400,"candidate_name":"EDILSON DIAZ HERRERA"}
+[2026-05-13 16:02:46] [INFO] Exams list displayed | Context: {"count":187}
+[2026-05-13 16:47:37] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":390,"exam_type_id":4,"candidates_count":18,"order_number":"43"}
+[2026-05-13 16:49:45] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":443,"candidate_name":"JONATHAN MIGUEL GOMEZ HUMANEZ"}
+[2026-05-13 16:49:45] [INFO] Exams list displayed | Context: {"count":205}
+[2026-05-13 19:28:47] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":390,"exam_type_id":4,"candidates_count":20,"order_number":"52"}
+[2026-05-13 19:30:27] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":452,"candidate_name":"DIANA CAROLINA CRUZ MORENO"}
+[2026-05-13 19:30:27] [INFO] Exams list displayed | Context: {"count":225}
+[2026-05-13 20:43:14] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":355,"exam_type_id":4,"candidates_count":16,"order_number":"302"}
+[2026-05-13 20:44:05] [AUDIT] User 'Array' performed action: Exam updated | Context: {"exam_id":476,"candidate_name":"ALVARO FUNEME PINILLA"}
+[2026-05-13 20:44:05] [INFO] Exams list displayed | Context: {"count":241}
+[2026-05-13 20:49:46] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":381,"exam_type_id":4,"candidates_count":8,"order_number":"30"}
+[2026-05-14 15:22:56] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":435,"exam_type_id":4,"candidates_count":4,"order_number":"32"}
+[2026-05-15 19:50:55] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":401,"exam_type_id":4,"candidates_count":6,"order_number":"48"}
+[2026-05-15 21:08:05] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":388,"exam_type_id":4,"candidates_count":4,"order_number":"50"}
+[2026-05-15 21:27:06] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":406,"exam_type_id":4,"candidates_count":5,"order_number":"1037739"}
+[2026-05-15 21:28:15] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":406,"exam_type_id":4,"candidates_count":3,"order_number":"1037739"}
+[2026-05-15 21:59:32] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":342,"exam_type_id":4,"candidates_count":6,"order_number":"1063334"}
+[2026-05-20 15:21:00] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":436,"exam_type_id":4,"candidates_count":2,"order_number":"989910"}
+[2026-05-20 15:33:59] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":376,"exam_type_id":4,"candidates_count":6,"order_number":"1006684"}
+[2026-05-20 15:35:22] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":376,"exam_type_id":4,"candidates_count":7,"order_number":"1031989"}
+[2026-05-20 16:17:38] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":343,"exam_type_id":4,"candidates_count":50,"order_number":"1011824"}
+[2026-05-20 17:12:28] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":344,"exam_type_id":4,"candidates_count":50,"order_number":"1042693"}
+[2026-05-20 17:51:42] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":"437","exam_type_id":4,"candidates_count":12,"order_number":"1042974"}
+[2026-05-20 18:59:39] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":374,"exam_type_id":4,"candidates_count":2,"order_number":"1064663"}
+[2026-05-20 19:10:15] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":431,"exam_type_id":4,"candidates_count":2,"order_number":"1045816"}
+[2026-05-20 19:32:57] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":399,"exam_type_id":4,"candidates_count":20,"order_number":"1027264"}
+[2026-05-20 20:51:28] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":406,"exam_type_id":4,"candidates_count":10,"order_number":"1067474"}
+[2026-05-21 20:57:59] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":"438","exam_type_id":4,"candidates_count":2,"order_number":"2222"}
+[2026-05-21 20:59:26] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":439,"exam_type_id":4,"candidates_count":2,"order_number":"222222"}
+[2026-05-21 21:04:38] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":439,"exam_type_id":4,"candidates_count":2,"order_number":"33333"}
+[2026-05-21 21:27:31] [INFO] Exams list displayed | Context: {"count":432}
+[2026-05-21 21:34:18] [INFO] Exams list displayed | Context: {"count":432}
+[2026-05-25 18:00:03] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":389,"exam_type_id":4,"candidates_count":10,"order_number":"1009401"}
+[2026-05-25 18:35:36] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":383,"exam_type_id":4,"candidates_count":5,"order_number":"1045655"}
+[2026-05-25 18:50:36] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":428,"exam_type_id":4,"candidates_count":20,"order_number":"1062571"}
+[2026-05-25 19:08:48] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":407,"exam_type_id":4,"candidates_count":6,"order_number":"1058769"}
+[2026-05-28 21:20:47] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":416,"exam_type_id":4,"candidates_count":6,"order_number":"1053370"}
+[2026-05-28 21:44:21] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":362,"exam_type_id":4,"candidates_count":8,"order_number":"1056212"}
+[2026-05-28 21:52:24] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":414,"exam_type_id":4,"candidates_count":47,"order_number":"1065306"}
+[2026-06-01 21:37:34] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":402,"exam_type_id":4,"candidates_count":8,"order_number":"1075839-1075840"}
+[2026-06-02 19:29:02] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":"442","exam_type_id":4,"candidates_count":8,"order_number":"1033778"}
+[2026-06-02 19:45:16] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":384,"exam_type_id":4,"candidates_count":3,"order_number":"1018817"}
+[2026-06-02 20:56:35] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":343,"exam_type_id":4,"candidates_count":24,"order_number":"1033778"}
+[2026-06-02 21:00:00] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":343,"exam_type_id":4,"candidates_count":1,"order_number":"1033778"}
+[2026-06-02 21:00:40] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":343,"exam_type_id":4,"candidates_count":1,"order_number":"1033778"}
+[2026-06-02 21:01:12] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":343,"exam_type_id":4,"candidates_count":24,"order_number":"1033778"}
+[2026-06-02 21:22:22] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":408,"exam_type_id":4,"candidates_count":50,"order_number":"1039644"}
+[2026-06-02 21:53:34] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":351,"exam_type_id":4,"candidates_count":11,"order_number":"1056327"}
+[2026-06-05 15:03:08] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":387,"exam_type_id":4,"candidates_count":15,"order_number":"1078744"}
+[2026-06-05 15:08:17] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":374,"exam_type_id":4,"candidates_count":7,"order_number":"1076635"}
+[2026-06-05 15:13:09] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":374,"exam_type_id":4,"candidates_count":11,"order_number":"1064652"}
+[2026-06-05 15:43:27] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":348,"exam_type_id":4,"candidates_count":4,"order_number":"1060443"}
+[2026-06-05 15:44:10] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":348,"exam_type_id":4,"candidates_count":4,"order_number":"1060443"}
+[2026-06-05 16:37:31] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":359,"exam_type_id":4,"candidates_count":6,"order_number":"1073318"}
+[2026-06-05 17:02:44] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":349,"exam_type_id":4,"candidates_count":20,"order_number":"1068991"}
+[2026-06-05 17:25:22] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":378,"exam_type_id":4,"candidates_count":73,"order_number":"1043578"}
+[2026-06-09 15:25:19] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":413,"exam_type_id":4,"candidates_count":31,"order_number":"1080902"}
+[2026-06-09 15:48:59] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":368,"exam_type_id":4,"candidates_count":22,"order_number":"1074148"}
+[2026-06-09 16:43:20] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":348,"exam_type_id":4,"candidates_count":2,"order_number":"1078706"}
+[2026-06-09 16:58:07] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":416,"exam_type_id":4,"candidates_count":1,"order_number":"998998"}
