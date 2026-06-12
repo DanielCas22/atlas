@@ -74,7 +74,69 @@ class DashboardController
         $topCompanies = $examModel->getTopCompaniesByExams(5);
         $topExamTypes = $examModel->getTopExamTypes(5);
 
+        $statusLabels = [
+            'FINALIZADO' => 'Finalizado',
+            'RECHAZADO' => 'Rechazado',
+        ];
+
+        $statusTotals = array_column($statusSummary, 'total', 'status');
+        $statusSummary = [];
+        foreach ($statusLabels as $statusCode => $statusLabel) {
+            $statusSummary[] = [
+                'status' => $statusCode,
+                'label' => $statusLabel,
+                'total' => intval($statusTotals[$statusCode] ?? 0),
+            ];
+        }
+
         include __DIR__ . '/../views/dashboard/estadisticas.php';
+    }
+
+    public function estadisticasData()
+    {
+        $this->ensureAuth();
+
+        $examModel = new ExamModel();
+        $companyModel = new CompanyModel();
+
+        $totalExams = $examModel->countAll();
+        $registeredCompanies = $companyModel->countAll();
+        $activeCompanies = $companyModel->countCompaniesWithExams();
+        $resultSummary = $examModel->getResultSummary();
+        $statusSummaryRaw = $examModel->getStatusSummary();
+        $topCompanies = $examModel->getTopCompaniesByExams(5);
+
+        $statusLabels = [
+            'FINALIZADO' => 'Finalizado',
+            'RECHAZADO' => 'Rechazado',
+        ];
+
+        $statusTotals = array_column($statusSummaryRaw, 'total', 'status');
+        $statusSummary = [];
+        foreach ($statusLabels as $statusCode => $statusLabel) {
+            $statusSummary[] = [
+                'status' => $statusCode,
+                'label' => $statusLabel,
+                'total' => intval($statusTotals[$statusCode] ?? 0),
+            ];
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'totalExams' => intval($totalExams),
+            'registeredCompanies' => intval($registeredCompanies),
+            'activeCompanies' => intval($activeCompanies),
+            'resultSummary' => [
+                'aptos' => intval($resultSummary['aptos'] ?? 0),
+                'no_aptos' => intval($resultSummary['no_aptos'] ?? 0),
+                'pendientes' => intval($resultSummary['pendientes'] ?? 0),
+                'en_curso' => intval($resultSummary['en_curso'] ?? 0),
+                'sin_resultado' => intval($resultSummary['sin_resultado'] ?? 0),
+            ],
+            'statusSummary' => $statusSummary,
+            'topCompanies' => $topCompanies,
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
     }
 
     private function getRoleOptions()
@@ -723,6 +785,8 @@ class DashboardController
 
                 // Obtener índices de columnas
                 $colIndices = $this->getColumnIndices($worksheet, $columns);
+
+                // Obtener índices de columnas
                 
                 $highestRow = $worksheet->getHighestRow();
                 for ($rowNum = 2; $rowNum <= $highestRow; $rowNum++) {
@@ -743,7 +807,7 @@ class DashboardController
                     
                     // Extraer datos del paciente
                     $patientData = [
-                        'name' => $this->getCellValue($worksheet, $colIndices['name'], $rowNum),
+                        'name' => $this->sanitizeCandidateName($this->getCellValue($worksheet, $colIndices['name'], $rowNum)),
                         'document' => $this->getCellValue($worksheet, $colIndices['document'], $rowNum),
                         'phone' => $this->getCellValue($worksheet, $colIndices['phone'], $rowNum),
                         'gender' => $this->getCellValue($worksheet, $colIndices['gender'], $rowNum),
@@ -823,6 +887,11 @@ class DashboardController
         }
 
         if (is_string($value)) {
+            // Reemplazar saltos y colapsar espacios
+            $value = preg_replace('/[\r\n\t]+/', ' ', $value);
+            $value = preg_replace('/\s{2,}/u', ' ', $value);
+            // Remover separador visual ' + ' entre campos (preserva '+' en emails sin espacios)
+            $value = preg_replace('/\s+\+\s+/u', ' ', $value);
             return trim($value);
         }
 
@@ -1014,12 +1083,19 @@ class DashboardController
             throw new Exception('No se pudo abrir el archivo CSV');
         }
 
+        // Detectar delimitador (coma, punto y coma, tab, barra vertical)
+        $delimiter = $this->detectCsvDelimiter($filePath);
+
         // Obtener índices de columnas
         $colIndices = [];
         $rowIndex = 0;
 
-        while (($row = fgetcsv($handle)) !== false) {
+        $sampleRows = [];
+        while (($row = fgetcsv($handle, 0, $delimiter)) !== false) {
             $rowIndex++;
+
+            // Normalizar cada campo del row para evitar saltos de línea y espacios extra
+            $row = array_map([$this, 'sanitizeCsvField'], $row);
 
             if ($rowIndex === 1) {
                 // Procesar encabezados
@@ -1027,27 +1103,29 @@ class DashboardController
                     if (is_numeric($colRef)) {
                         $colIndices[$key] = intval($colRef) - 1;
                     } else {
-                        // Buscar por nombre
+                        // Buscar por nombre (insensible a mayúsculas)
                         $colIndices[$key] = array_search(strtolower(trim($colRef)), array_map('strtolower', $row));
                         if ($colIndices[$key] === false) {
                             $colIndices[$key] = null;
                         }
                     }
                 }
+                // Guardar encabezado de ejemplo para logging
+                $sampleRows[] = $row;
                 continue;
             }
 
             $company = $row[$colIndices['company'] ?? 0] ?? '';
             $company = trim($company);
-            
+
             if (empty($company)) continue;
-            
+
             if (!isset($companiesData[$company])) {
                 $companiesData[$company] = [];
             }
-            
+
             $patientData = [
-                'name' => $row[$colIndices['name'] ?? 1] ?? '',
+                'name' => $this->sanitizeCandidateName($row[$colIndices['name'] ?? 1] ?? ''),
                 'document' => $row[$colIndices['document'] ?? 2] ?? '',
                 'phone' => $row[$colIndices['phone'] ?? 3] ?? '',
                 'gender' => $row[$colIndices['gender'] ?? 4] ?? '',
@@ -1056,13 +1134,124 @@ class DashboardController
                 'result' => $row[$colIndices['result'] ?? 7] ?? '',
                 'exam' => 'Psicofisico',
             ];
-            
+
+            if (count($sampleRows) < 5) {
+                $sampleRows[] = $row;
+            }
+
             $companiesData[$company][] = $patientData;
         }
 
         fclose($handle);
         return $companiesData;
     }
+
+    private function detectCsvDelimiter(string $filePath, $sampleLines = 5)
+    {
+        $delimiters = [',', ';', "\t", '|'];
+        $counts = array_fill_keys($delimiters, 0);
+
+        $handle = fopen($filePath, 'r');
+        if ($handle === false) return ',';
+
+        $lineNum = 0;
+        while (($line = fgets($handle)) !== false && $lineNum < $sampleLines) {
+            $lineNum++;
+            foreach ($delimiters as $d) {
+                $counts[$d] += substr_count($line, $d);
+            }
+        }
+
+        fclose($handle);
+
+        // Elegir el delimitador con mayor ocurrencia
+        arsort($counts);
+        $best = key($counts);
+
+return $best ?: ',';
+    }
+
+    private function sanitizeCsvField($value)
+    {
+        // Normalizar tipo
+        $value = $value ?? '';
+        if (!is_string($value)) {
+            $value = (string) $value;
+        }
+
+        // Convertir saltos de línea y tabs a espacios, colapsar múltiples espacios
+        $value = preg_replace('/[\r\n\t]+/', ' ', $value);
+        $value = preg_replace('/\s{2,}/u', ' ', $value);
+
+        // Remover separador visual ' + ' que a veces aparece entre campos (mantener '+' dentro de emails/nombres cuando no tiene espacios)
+        $value = preg_replace('/\s+\+\s+/u', ' ', $value);
+
+        return trim($value);
+    }
+
+    private function sanitizeCandidateName($value)
+    {
+        $value = $this->sanitizeCsvField($value);
+        if ($value === '') return '';
+
+        // Palabras indicativas de dirección/ubicación que truncarán el nombre
+        $stopWords = [
+            'BARRIO','CONJUNTO','URB','URBANO','MANZANA','APTO','TORRE','EDIF','CASA',
+            'CALLE','CLL','CRA','CR','TRANS','SECTOR','BLOQUE','MESA','EMAIL','CORREO',
+            'LOCALIDAD'
+        ];
+
+        // Dividir en tokens y acumular mientras parezcan nombres (solo letras, guiones y apóstrofes)
+        $tokens = preg_split('/\s+/u', $value);
+        $nameParts = [];
+
+        foreach ($tokens as $token) {
+            $t = trim($token, ",.:;()[]\"'");
+            if ($t === '') break;
+
+            // Si token contiene email, números o símbolos, cortar
+            if (strpos($t, '@') !== false) break;
+            if (preg_match('/\d/', $t)) break;
+
+            // Si el token es una de las stopWords -> cortar
+            if (in_array(mb_strtoupper($t, 'UTF-8'), $stopWords, true)) break;
+
+            // Si el token contiene caracteres no alfabéticos (excepto guion/apóstrofe/punto), cortar
+            if (!preg_match('/^[\p{L}\.\-\'\u2019]+$/u', $t)) {
+                break;
+            }
+
+            $nameParts[] = $t;
+        }
+
+        if (!empty($nameParts)) {
+            return trim(implode(' ', $nameParts));
+        }
+
+        // Fallback: si no se pudieron extraer partes "limpias", intentar truncar en la primera stopWord o email
+        $minPos = null;
+        foreach ($stopWords as $w) {
+            $pos = stripos($value, $w);
+            if ($pos !== false && ($minPos === null || $pos < $minPos)) {
+                $minPos = $pos;
+            }
+        }
+        $atPos = stripos($value, '@');
+        if ($atPos !== false && ($minPos === null || $atPos < $minPos)) {
+            $minPos = $atPos;
+        }
+
+        if ($minPos !== null) {
+            $candidate = trim(substr($value, 0, $minPos));
+            // Quitar puntuación final
+            $candidate = rtrim($candidate, ",.:;\-_/\\");
+            return $candidate;
+        }
+
+        return $value;
+    }
+
+
 
     private function columnLetterToIndex($column)
     {

@@ -3,14 +3,24 @@
 
 class ExamModel extends BaseModel
 {
-    public function all()
+    public function all(string $status = null)
     {
-        $sql = 'SELECT e.id, sc.name as company, et.name as exam_type, e.candidate_name, e.order_number, e.status, e.created_at, e.updated_at
+        $sql = 'SELECT e.id, sc.name as company_name, et.name as exam_type, e.candidate_name, e.document_number, e.phone, e.gender, e.birth_date, e.exam_date, e.order_number, e.status, e.created_at, e.updated_at
                 FROM exams e
                 JOIN security_companies sc ON e.company_id = sc.id
-                JOIN exam_types et ON e.exam_type_id = et.id
-                ORDER BY e.created_at DESC';
-        return $this->db->query($sql)->fetchAll();
+                JOIN exam_types et ON e.exam_type_id = et.id';
+        $params = [];
+
+        if ($status !== null) {
+            $sql .= ' WHERE e.status = ?';
+            $params[] = $status;
+        }
+
+        $sql .= ' ORDER BY e.created_at DESC';
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
     }
 
     public function countAll()

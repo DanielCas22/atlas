@@ -65,15 +65,90 @@
     .estadisticas-white-text .table-striped tbody tr:nth-of-type(odd) {
         background-color: rgba(255,255,255,0.03);
     }
+    .estadisticas-white-text .list-group {
+        gap: 0.55rem;
+        margin-top: 0.4rem;
+    }
     .estadisticas-white-text .list-group-item {
         background: transparent;
-        border-bottom: 1px solid rgba(255,255,255,0.08);
+        border: 1px solid transparent;
+        border-radius: 16px;
+        margin-bottom: 0;
+        padding: 0.85rem 1.2rem;
+        transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        text-decoration: none;
+        width: calc(100% + 3px);
+        margin-left: -1.5px;
+    }
+    .estadisticas-white-text .list-group-item:hover,
+    .estadisticas-white-text .list-group-item-action:hover {
+        background-color: rgba(255,255,255,0.10);
+        border-color: rgba(255,255,255,0.16);
+        text-decoration: none;
+        transform: translateX(0);
+    }
+    .estadisticas-white-text .list-group-item h6 {
+        color: #ffffff;
+        margin-bottom: 0.15rem;
+        font-size: 0.98rem;
+        line-height: 1.2;
+    }
+    .estadisticas-white-text .list-group-item small {
+        color: rgba(255,255,255,0.62);
+        line-height: 1.25;
+    }
+    .estadisticas-white-text .list-group-item .fw-semibold {
+        color: #ffffff;
+        font-size: 1rem;
+    }
+    .estadisticas-white-text .list-group-item .d-flex {
+        width: 100%;
     }
     .estadisticas-white-text .list-group-item:last-child {
-        border-bottom: none;
+        margin-bottom: 0;
+    }
+    .estadisticas-white-text .card {
+        background: rgba(15, 23, 42, 0.94);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: none;
+    }
+    .estadisticas-white-text .card:hover {
+        transform: translateY(0);
+        box-shadow: none;
+    }
+    .estadisticas-white-text .card-body {
+        padding: 1.4rem;
+    }
+    .estadisticas-white-text .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    }
+    .estadisticas-white-text .card {
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        border-radius: 24px;
+        background: rgba(15, 23, 42, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .estadisticas-white-text .card-body {
+        border-radius: 24px;
+        padding: 1.5rem;
     }
     .estadisticas-white-text .card-title {
         color: #ffffff;
+    }
+    .estadisticas-white-text .table-responsive {
+        background: rgba(255,255,255,0.02);
+    }
+    .estadisticas-white-text .table thead th {
+        color: rgba(255, 255, 255, 0.78);
+    }
+    .estadisticas-white-text .card .badge {
+        opacity: 0.95;
     }
 </style>
 
@@ -104,56 +179,46 @@
                         </div>
                         <span class="badge bg-light text-primary">Total</span>
                     </div>
-                    <h2 class="fw-bold mb-1"><?php echo number_format(intval($totalExams)); ?></h2>
+                    <h2 class="fw-bold mb-1" id="totalExamsCount"><?php echo number_format(intval($totalExams)); ?></h2>
                     <p class="text-muted mb-0">Exámenes registrados</p>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="text-success fs-3">
-                            <i class="bi bi-check-circle"></i>
+            <a href="index.php?c=exam&a=list&status=FINALIZADO" class="text-decoration-none">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="text-success fs-3">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                            <span class="badge bg-light text-success">Aptos</span>
                         </div>
-                        <span class="badge bg-light text-success">Aptos</span>
+                        <h2 class="fw-bold mb-1" id="aptosCount"><?php echo number_format(intval($resultSummary['aptos'] ?? 0)); ?></h2>
+                        <p class="text-muted mb-0">Candidatos aptos</p>
                     </div>
-                    <h2 class="fw-bold mb-1"><?php echo number_format(intval($resultSummary['aptos'] ?? 0)); ?></h2>
-                    <p class="text-muted mb-0">Candidatos aptos</p>
                 </div>
-            </div>
+            </a>
         </div>
 
         <div class="col-lg-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="text-danger fs-3">
-                            <i class="bi bi-x-circle"></i>
+            <a href="index.php?c=exam&a=list&status=RECHAZADO" class="text-decoration-none">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="text-danger fs-3">
+                                <i class="bi bi-x-circle"></i>
+                            </div>
+                            <span class="badge bg-light text-danger">No aptos</span>
                         </div>
-                        <span class="badge bg-light text-danger">No aptos</span>
+                        <h2 class="fw-bold mb-1" id="noAptosCount"><?php echo number_format(intval($resultSummary['no_aptos'] ?? 0)); ?></h2>
+                        <p class="text-muted mb-0">Candidatos no aptos</p>
                     </div>
-                    <h2 class="fw-bold mb-1"><?php echo number_format(intval($resultSummary['no_aptos'] ?? 0)); ?></h2>
-                    <p class="text-muted mb-0">Candidatos no aptos</p>
                 </div>
-            </div>
+            </a>
         </div>
 
-        <div class="col-lg-3 col-md-6">
-            <div class="card border-0 shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="text-warning fs-3">
-                            <i class="bi bi-clock"></i>
-                        </div>
-                        <span class="badge bg-light text-warning">Pendientes</span>
-                    </div>
-                    <h2 class="fw-bold mb-1"><?php echo number_format(intval($resultSummary['pendientes'] ?? 0)); ?></h2>
-                    <p class="text-muted mb-0">Exámenes pendientes o en proceso</p>
-                </div>
-            </div>
-        </div>
     </div>
 
     <div class="row g-4 mb-4">
@@ -166,7 +231,7 @@
                         </div>
                         <span class="badge bg-light text-info">Registradas</span>
                     </div>
-                    <h2 class="fw-bold mb-1"><?php echo number_format(intval($registeredCompanies)); ?></h2>
+                    <h2 class="fw-bold mb-1" id="registeredCompaniesCount"><?php echo number_format(intval($registeredCompanies)); ?></h2>
                     <p class="text-muted mb-0">Empresas registradas en el sistema</p>
                 </div>
             </div>
@@ -181,7 +246,7 @@
                         </div>
                         <span class="badge bg-light text-success">Activas</span>
                     </div>
-                    <h2 class="fw-bold mb-1"><?php echo number_format(intval($activeCompanies)); ?></h2>
+                    <h2 class="fw-bold mb-1" id="activeCompaniesCount"><?php echo number_format(intval($activeCompanies)); ?></h2>
                     <p class="text-muted mb-0">Empresas que usan el servicio de exámenes</p>
                 </div>
             </div>
@@ -206,15 +271,16 @@
                         <div class="col-md-6">
                             <div class="list-group list-group-flush">
                                 <?php foreach ($statusSummary as $statusItem): ?>
-                                    <div class="list-group-item border-0 px-0 py-3">
+                                    <?php $statusValue = strtoupper(trim($statusItem['status'])); ?>
+                                    <a href="index.php?c=exam&a=list&status=<?php echo urlencode($statusValue); ?>" class="list-group-item list-group-item-action border-0 px-0 py-3 text-white" data-status="<?php echo htmlspecialchars($statusValue); ?>">
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div>
-                                                <h6 class="mb-1 text-capitalize"><?php echo htmlspecialchars(str_replace('_', ' ', strtolower($statusItem['status']))); ?></h6>
+                                                <h6 class="mb-1"><?php echo htmlspecialchars($statusItem['label']); ?></h6>
                                                 <small class="text-muted">Proporción del total</small>
                                             </div>
-                                            <span class="fw-semibold"><?php echo number_format(intval($statusItem['total'])); ?></span>
+                                            <span class="fw-semibold" id="statusCount-<?php echo htmlspecialchars($statusValue); ?>"><?php echo number_format(intval($statusItem['total'])); ?></span>
                                         </div>
-                                    </div>
+                                    </a>
                                 <?php endforeach; ?>
                             </div>
                         </div>
@@ -243,7 +309,7 @@
                                     <th class="text-end text-muted">Exámenes</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="topCompaniesBody">
                                 <?php foreach ($topCompanies as $index => $company): ?>
                                     <tr>
                                         <td class="fw-bold"><?php echo $index + 1; ?></td>
@@ -317,19 +383,19 @@
         const statusData = {
             labels: [
                 <?php foreach ($statusSummary as $item): ?>
-                    '<?php echo htmlspecialchars(str_replace('_', ' ', ucfirst(strtolower($item['status'])))); ?>',
+                    '<?php echo htmlspecialchars($item['label']); ?>',
                 <?php endforeach; ?>
             ],
             datasets: [{
                 data: [<?php echo implode(',', array_map('intval', array_column($statusSummary, 'total'))); ?>],
-                backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6c757d'],
-                hoverBackgroundColor: ['#0b5ed7', '#157347', '#f7c948', '#c82333', '#5c636a'],
+                backgroundColor: ['#0d6efd', '#dc3545', '#6c757d', '#ffc107', '#198754'],
+                hoverBackgroundColor: ['#0b5ed7', '#c82333', '#5c636a', '#f7c948', '#157347'],
                 borderWidth: 1,
                 borderColor: '#f8f9fa'
             }]
         };
 
-        new Chart(statusChart, {
+        const statusChartObject = new Chart(statusChart, {
             type: 'doughnut',
             data: statusData,
             options: {
@@ -348,6 +414,71 @@
                 }
             }
         });
+
+        const formatNumber = value => Number(value).toLocaleString('es-CO');
+
+        const updateDashboard = (data) => {
+            document.getElementById('totalExamsCount').textContent = formatNumber(data.totalExams);
+            document.getElementById('aptosCount').textContent = formatNumber(data.resultSummary.aptos);
+            document.getElementById('noAptosCount').textContent = formatNumber(data.resultSummary.no_aptos);
+            const registeredCompaniesCount = document.getElementById('registeredCompaniesCount');
+            const activeCompaniesCount = document.getElementById('activeCompaniesCount');
+            if (registeredCompaniesCount) {
+                registeredCompaniesCount.textContent = formatNumber(data.registeredCompanies);
+            }
+            if (activeCompaniesCount) {
+                activeCompaniesCount.textContent = formatNumber(data.activeCompanies);
+            }
+
+            const labels = data.statusSummary.map(item => item.label);
+            const totals = data.statusSummary.map(item => item.total);
+            statusChartObject.data.labels = labels;
+            statusChartObject.data.datasets[0].data = totals;
+            statusChartObject.update();
+
+            data.statusSummary.forEach(item => {
+                const element = document.getElementById('statusCount-' + item.status);
+                if (element) {
+                    element.textContent = formatNumber(item.total);
+                }
+            });
+
+            const topCompaniesBody = document.getElementById('topCompaniesBody');
+            if (topCompaniesBody) {
+                topCompaniesBody.innerHTML = '';
+                if (Array.isArray(data.topCompanies) && data.topCompanies.length > 0) {
+                    data.topCompanies.forEach((company, index) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="fw-bold">${index + 1}</td>
+                            <td>${company.company_name ? company.company_name.replace(/</g, '&lt;').replace(/>/g, '&gt;') : ''}</td>
+                            <td class="text-end fw-semibold">${formatNumber(company.exams_count)}</td>
+                        `;
+                        topCompaniesBody.appendChild(row);
+                    });
+                } else {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="3" class="text-center text-muted">No hay datos disponibles.</td>';
+                    topCompaniesBody.appendChild(row);
+                }
+            }
+        };
+
+        const refreshData = async () => {
+            try {
+                const response = await fetch('index.php?c=dashboard&a=estadisticasData');
+                if (!response.ok) {
+                    return;
+                }
+                const json = await response.json();
+                updateDashboard(json);
+            } catch (error) {
+                console.error('Error actualizando estadísticas:', error);
+            }
+        };
+
+        refreshData();
+        setInterval(refreshData, 15000);
     })();
 </script>
 

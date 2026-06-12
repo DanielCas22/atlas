@@ -40,6 +40,13 @@ require_once __DIR__ . '/../../helpers/FlashMessage.php';
                     </h5>
                 </div>
                 <div class="card-body p-0">
+                    <?php if (!empty($statusFilter)): ?>
+                        <div class="alert alert-info rounded-0 mb-0 px-4 py-3">
+                            <strong>Filtro activo:</strong> mostrando exámenes con estado
+                            <span class="fw-semibold"><?= htmlspecialchars($statusDisplay ?? $statusFilter) ?></span>.
+                            <a href="index.php?c=exam&a=list" class="alert-link">Ver todos</a>
+                        </div>
+                    <?php endif; ?>
                     <div class="table-responsive">
                         <table class="table table-hover mb-0">
                             <thead class="table-light">
@@ -47,6 +54,9 @@ require_once __DIR__ . '/../../helpers/FlashMessage.php';
                                     <th class="border-0 fw-semibold">#</th>
                                     <th class="border-0 fw-semibold">
                                         <i class="bi bi-person-vcard me-1"></i>Identificación
+                                    </th>
+                                    <th class="border-0 fw-semibold">
+                                        <i class="bi bi-building me-1"></i>Empresa
                                     </th>
                                     <th class="border-0 fw-semibold">
                                         <i class="bi bi-person me-1"></i>Nombre
@@ -75,17 +85,25 @@ require_once __DIR__ . '/../../helpers/FlashMessage.php';
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ((new ExamModel())->allWithDetails() as $exam): ?>
+                                <?php if (empty($exams)): ?>
                                     <tr>
-                                        <td class="fw-semibold text-muted">#<?= $exam['id'] ?></td>
-                                        <td>
-                                            <span class="badge bg-light text-dark">
-                                                <?= htmlspecialchars($exam['document_number'] ?? 'N/A') ?>
-                                            </span>
-                                        </td>
-                                        <td class="fw-semibold">
-                                            <?= htmlspecialchars($exam['candidate_name']) ?>
-                                        </td>
+                                        <td colspan="11" class="text-center text-muted py-4">No hay exámenes para el filtro seleccionado.</td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($exams as $exam): ?>
+                                        <tr>
+                                            <td class="fw-semibold text-muted">#<?= $exam['id'] ?></td>
+                                            <td>
+                                                <span class="badge bg-light text-dark">
+                                                    <?= htmlspecialchars($exam['document_number'] ?? 'N/A') ?>
+                                                </span>
+                                            </td>
+                                            <td class="fw-semibold">
+                                                <?= htmlspecialchars($exam['company_name'] ?? 'N/A') ?>
+                                            </td>
+                                            <td class="fw-semibold">
+                                                <?= htmlspecialchars($exam['candidate_name']) ?>
+                                            </td>
                                         <td>
                                             <i class="bi bi-telephone text-muted me-1"></i>
                                             <?= htmlspecialchars($exam['phone'] ?? 'N/A') ?>
@@ -144,6 +162,7 @@ require_once __DIR__ . '/../../helpers/FlashMessage.php';
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>

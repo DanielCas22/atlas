@@ -110,3 +110,23 @@
 [2026-06-09 15:48:59] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":368,"exam_type_id":4,"candidates_count":22,"order_number":"1074148"}
 [2026-06-09 16:43:20] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":348,"exam_type_id":4,"candidates_count":2,"order_number":"1078706"}
 [2026-06-09 16:58:07] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":416,"exam_type_id":4,"candidates_count":1,"order_number":"998998"}
+[2026-06-09 17:25:24] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":438,"exam_type_id":4,"candidates_count":22,"order_number":"88888"}
+[2026-06-09 17:33:21] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":438,"exam_type_id":4,"candidates_count":22,"order_number":"222222"}
+[2026-06-09 17:43:43] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":438,"exam_type_id":4,"candidates_count":22,"order_number":"111"}
+[2026-06-09 17:54:36] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":438,"exam_type_id":4,"candidates_count":22,"order_number":"000"}
+[2026-06-09 18:11:03] [INFO] Exams list displayed | Context: {"count":3,"status_filter":"EN_CURSO"}
+[2026-06-09 18:11:09] [INFO] Exams list displayed | Context: {"count":28,"status_filter":"RECHAZADO"}
+[2026-06-09 18:11:14] [INFO] Exams list displayed | Context: {"count":897,"status_filter":null}
+[2026-06-09 20:42:54] [INFO] Exams list displayed | Context: {"count":28,"status_filter":"RECHAZADO"}
+[2026-06-09 20:43:04] [INFO] Exams list displayed | Context: {"count":746,"status_filter":"FINALIZADO"}
+[2026-06-10 19:57:17] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":362,"exam_type_id":4,"candidates_count":9,"order_number":"1087379"}
+[2026-06-10 20:08:31] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":348,"exam_type_id":4,"candidates_count":2,"order_number":"1081832"}
+[2026-06-10 20:20:12] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":386,"exam_type_id":4,"candidates_count":40,"order_number":"1061567"}
+[2026-06-10 21:31:01] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":376,"exam_type_id":4,"candidates_count":12,"order_number":"1051820"}
+[2026-06-11 19:15:21] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":"444","exam_type_id":4,"candidates_count":22,"order_number":"1017105"}
+[2026-06-11 21:03:47] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":426,"exam_type_id":4,"candidates_count":21,"order_number":"1019145"}
+[2026-06-11 21:49:13] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":386,"exam_type_id":4,"candidates_count":40,"order_number":"1061567"}
+[2026-06-11 21:53:47] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":386,"exam_type_id":4,"candidates_count":40,"order_number":"1061567"}
+[2026-06-12 18:11:14] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":392,"exam_type_id":4,"candidates_count":107,"order_number":"pendientes"}
+[2026-06-12 18:49:12] [INFO] Exams list displayed | Context: {"count":1110,"status_filter":null}
+[2026-06-12 18:50:33] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":438,"exam_type_id":4,"candidates_count":50,"order_number":"8888888"}

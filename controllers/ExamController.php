@@ -27,8 +27,26 @@ class ExamController
     {
         $this->ensureAuth();
         try {
-            $exams = $this->examModel->all();
-            Logger::info('Exams list displayed', ['count' => count($exams)]);
+            $statusFilter = null;
+            $statusDisplay = null;
+            $allowedStatuses = [
+                'FINALIZADO' => 'Apto',
+                'RECHAZADO' => 'No apto',
+                'PENDIENTE' => 'Pendiente',
+                'EN_CURSO' => 'En curso',
+                'SIN_RESULTADO' => 'Sin resultado',
+            ];
+
+            if (!empty($_GET['status'])) {
+                $requestedStatus = strtoupper(trim($_GET['status']));
+                if (array_key_exists($requestedStatus, $allowedStatuses)) {
+                    $statusFilter = $requestedStatus;
+                    $statusDisplay = $allowedStatuses[$requestedStatus];
+                }
+            }
+
+            $exams = $this->examModel->all($statusFilter);
+            Logger::info('Exams list displayed', ['count' => count($exams), 'status_filter' => $statusFilter]);
             include __DIR__ . '/../views/exams/list.php';
         } catch (Exception $e) {
             Logger::error('Error displaying exams list', ['error' => $e->getMessage()]);
@@ -361,10 +379,12 @@ class ExamController
             // Probar diferentes separadores: tabulador, punto y coma, coma
             $separators = ["\t", ";", ","];
             $parts = [];
+            $separatorUsed = null;
 
             foreach ($separators as $sep) {
                 if (strpos($line, $sep) !== false) {
                     $parts = explode($sep, $line);
+                    $separatorUsed = $sep;
                     break;
                 }
             }
@@ -391,6 +411,21 @@ class ExamController
             $status = null;
             $order_number = null;
 
+            // Si la línea usa un separador claro (tab, ;, ,) y el primer campo es documento,
+            // tomar el segundo campo completo como nombre.
+            if ($separatorUsed !== null && count($parts) >= 2) {
+                $firstClean = preg_replace('/\D/', '', $parts[0]);
+                if (preg_match('/^\d{5,}$/', $firstClean)) {
+                    $maybeName = $parts[1];
+                    if (preg_match('/[A-Za-zÁÉÍÓÚÑáéíóúñ]/u', $maybeName)) {
+                        $document_number = $firstClean;
+                        $name = $maybeName;
+                        unset($parts[0], $parts[1]);
+                        $parts = array_values($parts);
+                    }
+                }
+            }
+
             // 1) Documento (ID): primer número largo (>= 5 dígitos)
             $documentIndex = null;
             foreach ($parts as $idx => $part) {
@@ -404,32 +439,35 @@ class ExamController
             }
 
             // 1.5) Nombre: tokens desde inicio hasta primer token claramente no nombre
-            $nameParts = [];
-            foreach ($parts as $idx => $part) {
-                $clean = preg_replace('/\D/', '', $part);
-                $isEmail = filter_var($part, FILTER_VALIDATE_EMAIL);
-                $isDate = $this->isValidDate($part);
-                $isGender = preg_match('/^[MF]$/i', $part);
-                $isPhone = preg_match('/^(3\d{7,9}|\d{7,13})$/', $clean);
-                $isStatus = preg_match('/\b(sin\s+resultado|apto|no\s+apto|reprobado|finalizado|completado|aplazado)\b/i', $part);
-                $isOrder = preg_match('/^\d{3,}$/', $clean);
-                // Palabras comunes en direcciones - EXPANDIDO para capturar mejor los nombres de lugares
-                // Incluye artículos (LA, EL, LOS, LAS), palabras de dirección y barrios comunes
-                $isSkipToken = preg_match('/\b(la|el|los|las|colombia|bogota|d\.c|activo|inactivo|usuarios?|barrio|conjunto|calle|carrera|diagonal|transversal|avenida|manzana|lote|edificio|piso|villa|casa|pent|bloque|sector|vereda|corregimiento|municipio|provincia|localidad|zona|región|estado|país|ciudad|ap|pcia|depto|dept|decad|humano|suba|chapinero|usaquen|la\s+candelaria|san\s+cristobal|engativa|puente|aranda|teusaquillo|santa\s+fe|los\s+mártires|antonio|nariño|rafael|uribe|libertadores|jerusalen|kennedy|fontibón|bosa|tunjuelito)\b/i', $part);
+            // Solo hacer esto si todavía no tenemos nombre completo del segundo campo.
+            if ($name === null) {
+                $nameParts = [];
+                foreach ($parts as $idx => $part) {
+                    $clean = preg_replace('/\D/', '', $part);
+                    $isEmail = filter_var($part, FILTER_VALIDATE_EMAIL);
+                    $isDate = $this->isValidDate($part);
+                    $isGender = preg_match('/^[MF]$/i', $part);
+                    $isPhone = preg_match('/^(3\d{7,9}|\d{7,13})$/', $clean);
+                    $isStatus = preg_match('/\b(sin\s+resultado|apto|no\s+apto|reprobado|finalizado|completado|aplazado)\b/i', $part);
+                    $isOrder = preg_match('/^\d{3,}$/', $clean);
+                    // Palabras comunes en direcciones - EXPANDIDO para capturar mejor los nombres de lugares
+                    // Incluye artículos (LA, EL, LOS, LAS), palabras de dirección y barrios comunes
+                    $isSkipToken = preg_match('/\b(la|el|los|las|colombia|bogota|d\.c|activo|inactivo|usuarios?|barrio|conjunto|calle|carrera|diagonal|transversal|avenida|manzana|lote|edificio|piso|villa|casa|pent|bloque|sector|vereda|corregimiento|municipio|provincia|localidad|zona|región|estado|país|ciudad|ap|pcia|depto|dept|decad|humano|suba|chapinero|usaquen|la\s+candelaria|san\s+cristobal|engativa|puente|aranda|teusaquillo|santa\s+fe|los\s+mártires|antonio|nariño|rafael|uribe|libertadores|jerusalen|kennedy|fontibón|bosa|tunjuelito)\b/i', $part);
 
-                // Limitar nombre a máximo 4 tokens para evitar capturar direcciones
-                if (count($nameParts) >= 4 || $isEmail || $isDate || $isGender || $isPhone || $isStatus || $isOrder || $isSkipToken || ($clean !== '' && preg_match('/^\d+$/', $part) && strlen($part) <= 3)) {
-                    break;
+                    // Limitar nombre a máximo 4 tokens para evitar capturar direcciones
+                    if (count($nameParts) >= 4 || $isEmail || $isDate || $isGender || $isPhone || $isStatus || $isOrder || $isSkipToken || ($clean !== '' && preg_match('/^\d+$/', $part) && strlen($part) <= 3)) {
+                        break;
+                    }
+
+                    if ($part !== '') {
+                        $nameParts[] = $part;
+                        unset($parts[$idx]);
+                    }
                 }
 
-                if ($part !== '') {
-                    $nameParts[] = $part;
-                    unset($parts[$idx]);
+                if (!empty($nameParts)) {
+                    $name = implode(' ', $nameParts);
                 }
-            }
-
-            if (!empty($nameParts)) {
-                $name = implode(' ', $nameParts);
             }
 
             // 2) Fechas (nacimiento + examen), ordenar cronológicamente
@@ -599,7 +637,7 @@ class ExamController
             if ($extension === 'csv') {
                 $reader = new \PhpOffice\PhpSpreadsheet\Reader\Csv();
                 $reader->setInputEncoding('UTF-8');
-                $reader->setDelimiter(',');
+                $reader->setDelimiter($this->detectCsvDelimiter($tmpFile));
                 $reader->setEnclosure('"');
                 $spreadsheet = $reader->load($tmpFile);
             } else {
@@ -720,6 +758,9 @@ class ExamController
 
             $candidate['status'] = $this->normalizeStatus($candidate['status']);
 
+            // Limpiar y extraer solo el nombre (evitar direcciones, emails, barrios)
+            $candidate['name'] = $this->sanitizeCandidateName($candidate['name']);
+
             if ($candidate['name'] === '' && $candidate['document_number'] === '') {
                 continue;
             }
@@ -769,6 +810,103 @@ class ExamController
         }
 
         return strtoupper($clean);
+    }
+
+    private function detectCsvDelimiter(string $filePath, $sampleLines = 5)
+    {
+        $delimiters = ["\t", ';', ','];
+        $counts = array_fill_keys($delimiters, 0);
+
+        $handle = fopen($filePath, 'r');
+        if ($handle === false) {
+            return ',';
+        }
+
+        $lineNum = 0;
+        while (($line = fgets($handle)) !== false && $lineNum < $sampleLines) {
+            $lineNum++;
+            foreach ($delimiters as $delimiter) {
+                $counts[$delimiter] += substr_count($line, $delimiter);
+            }
+        }
+
+        fclose($handle);
+        arsort($counts);
+        $best = key($counts);
+        return $best ?: ',';
+    }
+
+    private function sanitizeCandidateName($value)
+    {
+        $value = $value ?? '';
+        $value = trim((string) $value);
+        if ($value === '') return '';
+
+        // Normalizar espacios y separadores
+        $value = preg_replace('/[\r\n\t]+/', ' ', $value);
+        $value = preg_replace('/\s{2,}/u', ' ', $value);
+        $value = preg_replace('/\s+\+\s+/u', ' ', $value);
+
+        // Eliminar correo electrónico si existe
+        if (strpos($value, '@') !== false) {
+            $parts = preg_split('/\s+/', $value);
+            foreach ($parts as $i => $p) {
+                if (strpos($p, '@') !== false) {
+                    // mantener solo lo previo al email
+                    $value = trim(implode(' ', array_slice($parts, 0, $i)));
+                    break;
+                }
+            }
+        }
+
+        // Lista de palabras que indican inicio de dirección/ubicación
+        $stopWords = [
+            'BARRIO','BARIO','CONJUNTO','PORTAL','TORRE','APTO','MESA','LOCALIDAD','URB','URBANIZACION',
+            'URB.','URBANO','CALLE','CLL','CARRERA','CRA','AVENIDA','AV','MANZANA','BLOQUE','SECTOR','COL',
+            'COLOMBIA','CUNDINAMARCA','LA','EL','LOS','LAS','VILLA','CASA','EDIF','EDIFICIO'
+        ];
+
+        $tokens = preg_split('/\s+/u', $value);
+        $nameParts = [];
+
+        foreach ($tokens as $token) {
+            $t = trim($token, ",.:;()[]\"'\x{2019}");
+            if ($t === '') break;
+
+            // Si contiene dígitos o símbolos que no son comunes en nombres, cortar
+            if (preg_match('/\d/', $t)) break;
+            if (strpos($t, '@') !== false) break;
+
+            // Si token es una stopWord (insensible a mayúsculas), cortar
+            if (in_array(mb_strtoupper($t, 'UTF-8'), $stopWords, true)) break;
+
+            // Aceptar token si son letras, acentos, guiones o apóstrofes
+            if (!preg_match('/^[\p{L}\.\-\'\u2019]+$/u', $t)) break;
+
+            $nameParts[] = $t;
+
+            // Limitar tokens del nombre a 5 por seguridad
+            if (count($nameParts) >= 5) break;
+        }
+
+        if (!empty($nameParts)) {
+            return trim(implode(' ', $nameParts));
+        }
+
+        // Fallback: truncar en la primera stopWord encontrada
+        $minPos = null;
+        foreach ($stopWords as $w) {
+            $pos = stripos($value, $w);
+            if ($pos !== false && ($minPos === null || $pos < $minPos)) {
+                $minPos = $pos;
+            }
+        }
+        if ($minPos !== null) {
+            $candidate = trim(substr($value, 0, $minPos));
+            return rtrim($candidate, ",.:;\-_/\\");
+        }
+
+        return $value;
     }
 
     public function exportCandidates()
