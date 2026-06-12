@@ -123,6 +123,25 @@ $isLoginPage = isset($_GET['c'], $_GET['a']) && $_GET['c'] === 'auth' && $_GET['
             transform: translateY(-2px);
         }
     </style>
+    <script>
+        window.addEventListener('error', function(event) {
+            var message = event.message || '';
+            if (typeof message === 'string' && message.includes('A listener indicated an asynchronous response by returning true')) {
+                event.preventDefault();
+                console.warn('Error filtrado:', message);
+                return true;
+            }
+        });
+
+        window.addEventListener('unhandledrejection', function(event) {
+            var reason = event.reason;
+            var message = reason && (reason.message || reason.toString());
+            if (typeof message === 'string' && message.includes('A listener indicated an asynchronous response by returning true')) {
+                event.preventDefault();
+                console.warn('Rechazo de promesa filtrado:', message);
+            }
+        });
+    </script>
 </head>
 <body>
 <?php if (!$isLoginPage && !empty($_SESSION['user'])): ?>

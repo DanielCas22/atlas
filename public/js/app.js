@@ -45,5 +45,15 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
+
+    // Capturar rechazos de promesas no manejados y suprimir errores conocidos de extensiones
+    window.addEventListener('unhandledrejection', function(event) {
+        const reason = event.reason;
+        const message = reason && (reason.message || reason.toString());
+        if (typeof message === 'string' && message.includes('A listener indicated an asynchronous response by returning true')) {
+            event.preventDefault();
+            console.warn('Rechazo de promesa filtrado:', message);
+        }
+    });
 });
 

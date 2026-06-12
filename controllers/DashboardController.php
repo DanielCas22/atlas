@@ -311,12 +311,15 @@ class DashboardController
                             'result' => trim($_POST['result_column'] ?? ''),
                         ];
 
+                        $orderNumber = trim($_POST['order_number'] ?? '');
+                        $orderCapacity = intval($_POST['order_capacity'] ?? 0);
+
                         if (empty($columns['company'])) {
                             $error = 'Especifica la columna de empresa.';
                         } else {
                             // Procesar el archivo
                             try {
-                                $results = $this->processExcelFile($filePath, $columns, $fileExt);
+                                $results = $this->processExcelFile($filePath, $columns, $fileExt, $orderNumber, $orderCapacity);
                                 if (is_array($results) && !empty($results)) {
                                     $syncSummary = $this->syncCompaniesFromList(array_keys($results));
                                     $success = 'Archivo procesado correctamente. Se encontraron ' . count($results) . ' empresas. Los pacientes han sido clasificados y guardados en carpetas.';
@@ -765,7 +768,7 @@ class DashboardController
         exit;
     }
 
-    private function processExcelFile($filePath, $columns, $fileExt)
+    private function processExcelFile($filePath, $columns, $fileExt, $orderNumber = '', $orderCapacity = 0)
     {
         $results = [];
         $companiesData = []; // Almacenar datos de pacientes por empresa
@@ -790,7 +793,7 @@ class DashboardController
                 
                 $highestRow = $worksheet->getHighestRow();
                 for ($rowNum = 2; $rowNum <= $highestRow; $rowNum++) {
-                    if ($this->rowHasCellFill($worksheet, $rowNum, $colIndices)) {
+                    if ($this->rowHasCellFill($worksheet, $rowNum)) {
                         continue;
                     }
 
@@ -819,6 +822,11 @@ class DashboardController
                     
                     $companiesData[$company][] = $patientData;
                 }
+            }
+
+            // Aplicar orden y capacidad de orden si se configuró
+            if (!empty($orderNumber) && $orderCapacity > 0) {
+                $companiesData = $this->applyOrderNumbersToCompanyData($companiesData, $orderNumber, $orderCapacity);
             }
 
             // Crear carpetas y archivos Excel
@@ -898,13 +906,12 @@ class DashboardController
         return trim((string) ($value ?? ''));
     }
 
-    private function rowHasCellFill($worksheet, $rowNum, $colIndices)
+    private function rowHasCellFill($worksheet, $rowNum)
     {
-        foreach ($colIndices as $colIndex) {
-            if ($colIndex === false || $colIndex === null) {
-                continue;
-            }
+        $highestColumn = $worksheet->getHighestColumn();
+        $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
 
+        for ($colIndex = 1; $colIndex <= $highestColumnIndex; $colIndex++) {
             $cellAddress = $this->indexToColumnLetter($colIndex) . $rowNum;
             $fill = $worksheet->getStyle($cellAddress)->getFill();
             $fillType = $fill->getFillType();
@@ -976,12 +983,17 @@ class DashboardController
                     throw new Exception("No se puede crear la carpeta REPORTE GUARDA para: $company");
                 }
             }
-            
-            // Generar nombre del archivo con el nombre de la empresa y la fecha
-            $fileName = $this->sanitizeFileName($company) . '_' . $fechaHoy . '.xlsx';
+
+            // Generar un solo archivo por empresa y conservar los nuevos pacientes en el mismo archivo
+            $fileName = $this->sanitizeFileName($company) . '.xlsx';
             $filePath = $reportDir . '/' . $fileName;
-            
-            // Generar archivo Excel con los pacientes
+            $existingReportFile = $this->findExistingCompanyReportFile($reportDir, $company);
+            if ($existingReportFile !== $filePath && file_exists($existingReportFile)) {
+                if (!file_exists($filePath)) {
+                    rename($existingReportFile, $filePath);
+                }
+            }
+
             try {
                 $this->generatePatientExcelFile($patients, $filePath, $company);
             } catch (Exception $e) {
@@ -993,39 +1005,47 @@ class DashboardController
     private function generatePatientExcelFile($patients, $filePath, $empresa = '')
     {
         try {
-            $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            if (file_exists($filePath)) {
+                $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($filePath);
+                $spreadsheet = $reader->load($filePath);
+            } else {
+                $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+            }
+
             $sheet = $spreadsheet->getActiveSheet();
             $sheet->setTitle('Reporte');
-            
-            // Información del reporte en las primeras filas
-            if (!empty($empresa)) {
-                $sheet->setCellValue('A1', 'EMPRESA: ' . $empresa);
-                $sheet->setCellValue('A2', 'FECHA: ' . date('d/m/Y H:i:s'));
-                $sheet->getRowDimension(1)->setRowHeight(25);
-                $sheet->getRowDimension(2)->setRowHeight(25);
-                $startRow = 4;
-            } else {
-                $startRow = 1;
-            }
-            
-            // Encabezados
+
             $headers = ['Nombre', 'Documento', 'Teléfono', 'Género', 'Fecha Nacimiento', 'Fecha Examen', 'Resultado', 'Tipo Examen'];
-            $sheet->fromArray([$headers], null, 'A' . $startRow);
-            
-            // Aplicar estilo a encabezados
-            $headerStyle = [
-                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-                'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '366092']],
-                'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
-            ];
-            
-            for ($col = 'A'; $col <= 'H'; $col++) {
-                $sheet->getStyle($col . $startRow)->applyFromArray($headerStyle);
-            }
-            
-            // Datos de pacientes
-            if (!empty($patients)) {
+            $existingHighestRow = max(1, $sheet->getHighestRow());
+            $existingCompanyCell = trim((string)$sheet->getCell('A1')->getValue());
+
+            if (!$this->isCompanyReportSheet($sheet, $empresa)) {
+                if (!empty($empresa)) {
+                    $sheet->setCellValue('A1', 'EMPRESA: ' . $empresa);
+                    $sheet->setCellValue('A2', 'FECHA: ' . date('d/m/Y H:i:s'));
+                    $sheet->getRowDimension(1)->setRowHeight(25);
+                    $sheet->getRowDimension(2)->setRowHeight(25);
+                    $startRow = 4;
+                } else {
+                    $startRow = 1;
+                }
+
+                $sheet->fromArray([$headers], null, 'A' . $startRow);
+                $this->applyReportHeaderStyle($sheet, $startRow);
                 $rowNum = $startRow + 1;
+            } else {
+                $sheet->setCellValue('A2', 'FECHA: ' . date('d/m/Y H:i:s'));
+
+                if (trim((string)$sheet->getCell('A4')->getValue()) !== 'Nombre') {
+                    $sheet->fromArray([$headers], null, 'A4');
+                    $this->applyReportHeaderStyle($sheet, 4);
+                }
+
+                $existingHighestRow = max(4, $sheet->getHighestRow());
+                $rowNum = $existingHighestRow + 1;
+            }
+
+            if (!empty($patients)) {
                 foreach ($patients as $patient) {
                     $sheet->setCellValue('A' . $rowNum, $patient['name']);
                     $sheet->setCellValue('B' . $rowNum, $patient['document']);
@@ -1065,6 +1085,86 @@ class DashboardController
         } catch (Exception $e) {
             throw new Exception("Error al generar el archivo Excel: " . $e->getMessage());
         }
+    }
+
+    private function isCompanyReportSheet($sheet, $company)
+    {
+        $companyCell = trim((string)$sheet->getCell('A1')->getValue());
+        return $companyCell !== '' && strpos($companyCell, 'EMPRESA:') === 0;
+    }
+
+    private function applyOrderNumbersToCompanyData(array $companiesData, string $orderNumber, int $orderCapacity)
+    {
+        foreach ($companiesData as $company => &$patients) {
+            $assigned = 0;
+            $newPatients = [];
+            foreach ($patients as $patient) {
+                if ($assigned < $orderCapacity) {
+                    $patient['order_number'] = $orderNumber;
+                    $assigned++;
+                    $newPatients[] = $patient;
+                    continue;
+                }
+
+                if ($assigned >= $orderCapacity && count($newPatients) === $orderCapacity) {
+                    // Insertar una fila separadora una sola vez después de la primera tanda de orden si hay más pacientes.
+                    $newPatients[] = [
+                        'order_number' => '',
+                        'name' => '',
+                        'document' => '',
+                        'phone' => '',
+                        'gender' => '',
+                        'birth' => '',
+                        'exam_date' => '',
+                        'result' => '',
+                        'exam' => '',
+                    ];
+                    $assigned = -9999; // indicar que la fila separadora ya se agregó
+                }
+
+                $patient['order_number'] = '';
+                $newPatients[] = $patient;
+            }
+
+            $patients = $newPatients;
+        }
+        unset($patients);
+
+        return $companiesData;
+    }
+
+    private function applyReportHeaderStyle($sheet, $startRow)
+    {
+        $headerStyle = [
+            'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '366092']],
+            'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
+        ];
+
+        for ($col = 'A'; $col <= 'H'; $col++) {
+            $sheet->getStyle($col . $startRow)->applyFromArray($headerStyle);
+        }
+    }
+
+    private function findExistingCompanyReportFile($reportDir, $company)
+    {
+        $baseName = $this->sanitizeFileName($company);
+        $canonicalPath = $reportDir . '/' . $baseName . '.xlsx';
+
+        if (file_exists($canonicalPath)) {
+            return $canonicalPath;
+        }
+
+        $pattern = $reportDir . '/' . $baseName . '_*.xlsx';
+        $matches = glob($pattern);
+        if (!empty($matches)) {
+            usort($matches, function ($a, $b) {
+                return filemtime($b) <=> filemtime($a);
+            });
+            return $matches[0];
+        }
+
+        return $canonicalPath;
     }
 
     private function sanitizeFileName($fileName)
@@ -1217,7 +1317,7 @@ return $best ?: ',';
             if (in_array(mb_strtoupper($t, 'UTF-8'), $stopWords, true)) break;
 
             // Si el token contiene caracteres no alfabéticos (excepto guion/apóstrofe/punto), cortar
-            if (!preg_match('/^[\p{L}\.\-\'\u2019]+$/u', $t)) {
+            if (!preg_match('/^[\p{L}\.\-\'’]+$/u', $t)) {
                 break;
             }
 

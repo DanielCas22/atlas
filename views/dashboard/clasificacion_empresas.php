@@ -120,6 +120,21 @@
                             <input type="text" class="form-control" id="resultColumn" name="result_column" placeholder="Ej: H, Resultado, Estado" value="V">
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <label for="orderNumber" class="form-label fw-semibold">
+                                    <i class="bi bi-hash me-2"></i>Número de Orden
+                                </label>
+                                <input type="text" class="form-control" id="orderNumber" name="order_number" placeholder="Ej: 1019145" value="">
+                            </div>
+                            <div class="col-md-6 mb-4">
+                                <label for="orderCapacity" class="form-label fw-semibold">
+                                    <i class="bi bi-people me-2"></i>Cupos por Orden
+                                </label>
+                                <input type="number" class="form-control" id="orderCapacity" name="order_capacity" placeholder="Ej: 4" min="0" value="0">
+                            </div>
+                        </div>
+
                         <div class="mb-4" id="customColumnsContainer"></div>
 
                         <div class="mb-4">
