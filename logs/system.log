@@ -130,3 +130,7 @@
 [2026-06-12 18:11:14] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":392,"exam_type_id":4,"candidates_count":107,"order_number":"pendientes"}
 [2026-06-12 18:49:12] [INFO] Exams list displayed | Context: {"count":1110,"status_filter":null}
 [2026-06-12 18:50:33] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":438,"exam_type_id":4,"candidates_count":50,"order_number":"8888888"}
+[2026-06-16 16:09:35] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":431,"exam_type_id":4,"candidates_count":68,"order_number":"1060671"}
+[2026-06-16 16:25:24] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":375,"exam_type_id":4,"candidates_count":14,"order_number":"1052575"}
+[2026-06-16 16:32:45] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":412,"exam_type_id":4,"candidates_count":200,"order_number":"1042790"}
+[2026-06-16 16:51:29] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":399,"exam_type_id":4,"candidates_count":30,"order_number":"1045872"}
