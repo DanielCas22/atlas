@@ -195,7 +195,7 @@
                                                                         <div class="row align-items-center gx-2">
                                                                             <div class="col">
                                                                                 <div class="fw-semibold text-truncate"><?php echo htmlspecialchars($file['name']); ?></div>
-                                                                                <small class="text-white-50">
+                                                                                <small class="text-white-50 d-block">
                                                                                     <?php 
                                                                                     $size = $file['size'];
                                                                                     if ($size >= 1048576) {
@@ -207,11 +207,24 @@
                                                                                     }
                                                                                     ?> • Modificado: <?php echo $file['modified']; ?>
                                                                                 </small>
+                                                                                <?php if (!empty($file['order_number']) || !empty($file['order_capacity'])): ?>
+                                                                                    <small class="text-white-50 d-block mt-1">
+                                                                                        <?php if (!empty($file['order_number'])): ?>
+                                                                                            <span class="badge bg-info text-dark me-1">Orden: <?php echo htmlspecialchars($file['order_number']); ?></span>
+                                                                                        <?php endif; ?>
+                                                                                        <?php if (!empty($file['order_capacity'])): ?>
+                                                                                            <span class="badge bg-success text-dark">Cupos: <?php echo htmlspecialchars($file['order_capacity']); ?></span>
+                                                                                        <?php endif; ?>
+                                                                                    </small>
+                                                                                <?php endif; ?>
                                                                             </div>
                                                                             <div class="col-auto text-end">
                                                                                 <a href="index.php?c=dashboard&a=download&company=<?php echo urlencode($companyDir); ?>&folder=<?php echo urlencode($folderName); ?>&file=<?php echo urlencode($file['name']); ?>" class="btn btn-sm btn-primary mb-2">
                                                                                     <i class="bi bi-download me-1"></i>Descargar
                                                                                 </a>
+                                                                                <button type="button" class="btn btn-sm btn-secondary mb-2" onclick="toggleMetadataForm(this, '<?php echo htmlspecialchars($companyDir); ?>', '<?php echo htmlspecialchars($folderName); ?>', '<?php echo htmlspecialchars($file['name']); ?>')">
+                                                                                    <i class="bi bi-pencil-square me-1"></i>Editar metadata
+                                                                                </button>
                                                                                 <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete('<?php echo htmlspecialchars($companyDir); ?>', '<?php echo htmlspecialchars($folderName); ?>', '<?php echo htmlspecialchars($file['name']); ?>')">
                                                                                     <i class="bi bi-trash me-1"></i>Eliminar
                                                                                 </button>
@@ -260,6 +273,43 @@ function confirmDelete(company, folder, file) {
     document.getElementById('fileName').textContent = file;
     document.getElementById('deleteLink').href = `index.php?c=dashboard&a=deleteFile&company=${encodeURIComponent(company)}&folder=${encodeURIComponent(folder)}&file=${encodeURIComponent(file)}`;
     new bootstrap.Modal(document.getElementById('deleteModal')).show();
+}
+
+function toggleMetadataForm(button, company, folder, file) {
+    let formId = `metadata-form-${company}-${folder}-${file}`.replace(/[^a-zA-Z0-9-_]/g, '_');
+    let form = document.getElementById(formId);
+    if (!form) {
+        form = document.createElement('form');
+        form.id = formId;
+        form.method = 'POST';
+        form.action = 'index.php?c=dashboard&a=updateClassifiedFileMetadata';
+        form.className = 'metadata-form';
+        form.innerHTML = `
+            <input type="hidden" name="company" value="${company}">
+            <input type="hidden" name="folder" value="${folder}">
+            <input type="hidden" name="file" value="${file}">
+            <div class="row g-3 mt-3">
+                <div class="col-md-6">
+                    <label class="form-label">Número de Orden</label>
+                    <input type="text" name="order_number" class="form-control" placeholder="Número de orden">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Cupos</label>
+                    <input type="text" name="order_capacity" class="form-control" placeholder="Cupos disponibles">
+                </div>
+                <div class="col-12 text-end">
+                    <button type="submit" class="btn btn-success btn-sm">Guardar metadata</button>
+                </div>
+            </div>
+        `;
+        let container = document.createElement('div');
+        container.className = 'metadata-form-container mt-3';
+        container.appendChild(form);
+        const fileCard = button.closest('.list-group-item');
+        fileCard.appendChild(container);
+    } else {
+        form.remove();
+    }
 }
 
 // Función de búsqueda

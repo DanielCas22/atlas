@@ -82,7 +82,7 @@ class ExamModel extends BaseModel
                 FROM exams e
                 JOIN security_companies sc ON e.company_id = sc.id
                 JOIN exam_types et ON e.exam_type_id = et.id
-                ORDER BY e.created_at DESC';
+                ORDER BY e.exam_date ASC';
         return $this->db->query($sql)->fetchAll();
     }
 
@@ -124,7 +124,7 @@ class ExamModel extends BaseModel
                 JOIN security_companies sc ON e.company_id = sc.id
                 JOIN exam_types et ON e.exam_type_id = et.id
                 WHERE e.order_number = ?
-                ORDER BY e.created_at DESC';
+                ORDER BY e.exam_date ASC';
         $stmt = $this->db->prepare($sql);
         $stmt->execute([$orderNumber]);
         return $stmt->fetchAll();

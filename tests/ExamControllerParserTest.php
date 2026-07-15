@@ -130,6 +130,42 @@ expect($candidatesCsv[1]['phone'] === '3222952746', 'CSV: segundo teléfono corr
 expect($candidatesCsv[1]['order_number'] === '999110', 'CSV: segunda orden correcta.');
 expect($candidatesCsv[1]['exam_date'] === '2026-05-16', 'CSV: segunda fecha de examen correcta.');
 
+// Regresión: si la columna de teléfono no tiene un número válido, buscar el teléfono real en toda la fila.
+$csvRows[] = [
+    '22233344',
+    'MARIA FERNANDA LOPEZ',
+    'CALLE 45 #78-90',
+    '3507690579',
+    'CALLE 45 #78-90',
+    'F',
+    '+',
+    '03/12/1990',
+    'COLOMBIA',
+    'BOGOTA',
+    'BOGOTA D.C',
+    'Activo',
+    'Finalizado',
+    'Completado',
+    'Completado',
+    'Completado',
+    'Completado',
+    'Completado',
+    'Apto',
+    '888999',
+    '12/06/2026'
+];
+
+$fp = fopen($tempCsv, 'w');
+fputcsv($fp, $csvHeaders);
+foreach ($csvRows as $row) {
+    fputcsv($fp, $row);
+}
+fclose($fp);
+
+$result = $parseMethod->invoke($controller, $tempCsv, 'test.csv');
+expect(count($result['candidates']) === 3, 'Debe extraer 3 candidatos del CSV de prueba tras añadir el caso de regresión.');
+expect($result['candidates'][2]['phone'] === '3507690579', 'CSV: debe extraer el teléfono correcto de la fila adicional.');
+
 unlink($tempCsv);
 
 echo "ALL TESTS PASSED\n";

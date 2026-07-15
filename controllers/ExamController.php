@@ -447,7 +447,7 @@ class ExamController
                     $isEmail = filter_var($part, FILTER_VALIDATE_EMAIL);
                     $isDate = $this->isValidDate($part);
                     $isGender = preg_match('/^[MF]$/i', $part);
-                    $isPhone = preg_match('/^(3\d{7,9}|\d{7,13})$/', $clean);
+                    $isPhone = preg_match('/^3\d{9}$/', $clean);
                     $isStatus = preg_match('/\b(sin\s+resultado|apto|no\s+apto|reprobado|finalizado|completado|aplazado)\b/i', $part);
                     $isOrder = preg_match('/^\d{3,}$/', $clean);
                     // Palabras comunes en direcciones - EXPANDIDO para capturar mejor los nombres de lugares
@@ -528,7 +528,7 @@ class ExamController
             // 5) Teléfono (ANTES que orden para evitar que se capture como número de orden)
             foreach ($parts as $idx => $part) {
                 $clean = preg_replace('/\D/', '', $part);
-                if (!$phone && preg_match('/^(3\d{7,9}|\d{7,10})$/', $clean)) {
+                if (!$phone && preg_match('/^3\d{9}$/', $clean)) {
                     $phone = $clean;
                     unset($parts[$idx]);
                     break;
@@ -666,7 +666,7 @@ class ExamController
         $mapping = [
             'name' => ['nombre', 'candidate', 'candidato', 'full_name', 'nombre_completo'],
             'document_number' => ['documento', 'cedula', 'id', 'identificacion'],
-            'phone' => ['telefono', 'teléfono', 'phone', 'celular', 'mobile'],
+            'phone' => ['telefono', 'teléfono', 'phone', 'celular', 'mobile', 'tel', 'movil', 'móvil', 'cel'],
             'gender' => ['genero', 'género', 'sexo', 'gender', 'sex'],
             'birth_date' => ['fecha_nacimiento', 'nacimiento', 'birth_date', 'birthdate'],
             'exam_date' => ['fecha_examen', 'fecha_de_examen', 'fecha_creacion', 'exam_date', 'fecha', 'date'],
@@ -758,6 +758,18 @@ class ExamController
 
             $candidate['status'] = $this->normalizeStatus($candidate['status']);
 
+            $candidate['phone'] = $this->normalizePhone($candidate['phone']);
+            if ($candidate['phone'] === '') {
+                for ($col = 1; $col <= $highestColumnIndex; $col++) {
+                    $cellValue = trim((string) $worksheet->getCellByColumnAndRow($col, $row)->getValue());
+                    $phoneCandidate = $this->normalizePhone($cellValue);
+                    if ($phoneCandidate !== '' && $phoneCandidate !== $candidate['document_number']) {
+                        $candidate['phone'] = $phoneCandidate;
+                        break;
+                    }
+                }
+            }
+
             // Limpiar y extraer solo el nombre (evitar direcciones, emails, barrios)
             $candidate['name'] = $this->sanitizeCandidateName($candidate['name']);
 
@@ -810,6 +822,15 @@ class ExamController
         }
 
         return strtoupper($clean);
+    }
+
+    private function normalizePhone($value)
+    {
+        $digits = preg_replace('/\D/', '', (string) $value);
+        if (preg_match('/^3\d{9}$/', $digits)) {
+            return $digits;
+        }
+        return '';
     }
 
     private function detectCsvDelimiter(string $filePath, $sampleLines = 5)
@@ -881,7 +902,7 @@ class ExamController
             if (in_array(mb_strtoupper($t, 'UTF-8'), $stopWords, true)) break;
 
             // Aceptar token si son letras, acentos, guiones o apóstrofes
-            if (!preg_match('/^[\p{L}\.\-\'\u2019]+$/u', $t)) break;
+            if (!preg_match('/^[\p{L}\.\-\'\x{2019}]+$/u', $t)) break;
 
             $nameParts[] = $t;
 
@@ -1007,9 +1028,9 @@ class ExamController
             $sheet->setCellValue('C' . $row, $exam['document_number']);
             $sheet->setCellValue('D' . $row, $exam['candidate_name']);
             $sheet->setCellValue('E' . $row, $exam['phone']);
-            $sheet->setCellValue('F' . $row, $exam['birth_date']);
+            $sheet->setCellValue('F' . $row, $this->formatDate($exam['birth_date']));
             $sheet->setCellValue('G' . $row, $exam['gender']);
-            $sheet->setCellValue('H' . $row, $exam['exam_date']);
+            $sheet->setCellValue('H' . $row, $this->formatDate($exam['exam_date']));
             // Resultado amigable
             $status = strtoupper(trim($exam['status'] ?? ''));
             if ($status === 'FINALIZADO') {
@@ -1052,5 +1073,31 @@ class ExamController
         $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
         $writer->save('php://output');
         exit;
+    }
+
+    /**
+     * Format date from YYYY-MM-DD to DD/MM/YYYY
+     * @param string $date Date in YYYY-MM-DD format
+     * @return string Date in DD/MM/YYYY format, or empty string if invalid
+     */
+    private function formatDate($date)
+    {
+        if (empty($date)) {
+            return '';
+        }
+
+        $date = trim($date);
+        
+        // Handle datetime format (YYYY-MM-DD HH:MM:SS)
+        if (strlen($date) > 10) {
+            $date = substr($date, 0, 10);
+        }
+
+        // Parse YYYY-MM-DD format
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $matches)) {
+            return $matches[3] . '/' . $matches[2] . '/' . $matches[1];
+        }
+
+        return $date;
     }
 }

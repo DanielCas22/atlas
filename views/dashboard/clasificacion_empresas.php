@@ -68,72 +68,58 @@
                             <label for="companyColumn" class="form-label fw-semibold">
                                 <i class="bi bi-building me-2"></i>Columna de Empresa *
                             </label>
-                            <input type="text" class="form-control" id="companyColumn" name="company_column" placeholder="Ej: A, Empresa, Company" value="AC" required>
+                            <input type="text" class="form-control" id="companyColumn" name="company_column" placeholder="Ej: A, Empresa, Company" value="AB" required>
                         </div>
 
                         <div class="mb-4">
                             <label for="nameColumn" class="form-label fw-semibold">
                                 <i class="bi bi-person me-2"></i>Columna de Nombre *
                             </label>
-                            <input type="text" class="form-control" id="nameColumn" name="name_column" placeholder="Ej: B, Nombre" value="E">
+                            <input type="text" class="form-control" id="nameColumn" name="name_column" placeholder="Ej: B, Nombre" value="D">
                         </div>
 
                         <div class="mb-4">
                             <label for="documentColumn" class="form-label fw-semibold">
                                 <i class="bi bi-card-text me-2"></i>Columna de Documento
                             </label>
-                            <input type="text" class="form-control" id="documentColumn" name="document_column" placeholder="Ej: C, Cedula" value="D">
+                            <input type="text" class="form-control" id="documentColumn" name="document_column" placeholder="Ej: C, Cedula" value="C">
                         </div>
 
                         <div class="mb-4">
                             <label for="phoneColumn" class="form-label fw-semibold">
                                 <i class="bi bi-telephone me-2"></i>Columna de Teléfono
                             </label>
-                            <input type="text" class="form-control" id="phoneColumn" name="phone_column" placeholder="Ej: D, Telefono" value="H">
+                            <input type="text" class="form-control" id="phoneColumn" name="phone_column" placeholder="Ej: D, Telefono" value="G">
                         </div>
 
                         <div class="mb-4">
                             <label for="genderColumn" class="form-label fw-semibold">
                                 <i class="bi bi-person-check me-2"></i>Columna de Género
                             </label>
-                            <input type="text" class="form-control" id="genderColumn" name="gender_column" placeholder="Ej: E, Genero" value="I">
+                            <input type="text" class="form-control" id="genderColumn" name="gender_column" placeholder="Ej: E, Genero" value="H">
                         </div>
 
                         <div class="mb-4">
                             <label for="birthColumn" class="form-label fw-semibold">
                                 <i class="bi bi-calendar-event me-2"></i>Columna de Fecha Nacimiento
                             </label>
-                            <input type="text" class="form-control" id="birthColumn" name="birth_column" placeholder="Ej: F, Fecha_Nacimiento" value="K">
+                            <input type="text" class="form-control" id="birthColumn" name="birth_column" placeholder="Ej: F, Fecha_Nacimiento" value="J">
                         </div>
 
                         <div class="mb-4">
                             <label for="examDateColumn" class="form-label fw-semibold">
                                 <i class="bi bi-calendar2-event me-2"></i>Columna de Fecha de Examen
                             </label>
-                            <input type="text" class="form-control" id="examDateColumn" name="exam_date_column" placeholder="Ej: G, Fecha_Examen" value="X">
+                            <input type="text" class="form-control" id="examDateColumn" name="exam_date_column" placeholder="Ej: G, Fecha_Examen" value="W">
                         </div>
 
                         <div class="mb-4">
                             <label for="resultColumn" class="form-label fw-semibold">
                                 <i class="bi bi-check2-circle me-2"></i>Columna de Resultado
                             </label>
-                            <input type="text" class="form-control" id="resultColumn" name="result_column" placeholder="Ej: H, Resultado, Estado" value="V">
+                            <input type="text" class="form-control" id="resultColumn" name="result_column" placeholder="Ej: H, Resultado, Estado" value="U">
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-4">
-                                <label for="orderNumber" class="form-label fw-semibold">
-                                    <i class="bi bi-hash me-2"></i>Número de Orden
-                                </label>
-                                <input type="text" class="form-control" id="orderNumber" name="order_number" placeholder="Ej: 1019145" value="">
-                            </div>
-                            <div class="col-md-6 mb-4">
-                                <label for="orderCapacity" class="form-label fw-semibold">
-                                    <i class="bi bi-people me-2"></i>Cupos por Orden
-                                </label>
-                                <input type="number" class="form-control" id="orderCapacity" name="order_capacity" placeholder="Ej: 4" min="0" value="0">
-                            </div>
-                        </div>
 
                         <div class="mb-4" id="customColumnsContainer"></div>
 

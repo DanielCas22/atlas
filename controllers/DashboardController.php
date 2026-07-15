@@ -228,7 +228,7 @@ class DashboardController
             ];
 
             if ($data['nombres'] && $data['apellidos'] && $data['tipo_documento'] && $data['numero_documento'] && $data['telefono'] && $data['email'] && $data['username'] && $data['password'] && $data['role_id'] && isset($roleOptions[$data['role_id']])) {
-                // Asegurar que el rol existe en roles (si no, insertamos coordinador como ejemplo).
+                // Asegurar que el rol existe en roles.
                 $pdo = Database::getInstance()->getConnection();
                 $stmtRole = $pdo->prepare('SELECT id FROM roles WHERE id = ?');
                 $stmtRole->execute([$data['role_id']]);
@@ -238,40 +238,58 @@ class DashboardController
                     $stmtInsertRole->execute([$data['role_id'], $roleOptions[$data['role_id']], 'Rol creado automáticamente']);
                 }
 
-                // Guarda en la tabla users con el rol elegido
-                $stmt = $pdo->prepare('INSERT INTO users (role_id, username, password, fullname, email) VALUES (?, ?, ?, ?, ?)');
-                $stmt->execute([
-                    $data['role_id'],
-                    $data['username'],
-                    password_hash($data['password'], PASSWORD_BCRYPT),
-                    $data['nombres'] . ' ' . $data['apellidos'],
-                    $data['email'],
-                ]);
+                // Verificar si el usuario ya existe
+                $stmtUserExists = $pdo->prepare('SELECT id FROM users WHERE username = ?');
+                $stmtUserExists->execute([$data['username']]);
+                if ($stmtUserExists->fetch()) {
+                    $error = 'El nombre de usuario ya existe. Elige otro nombre de usuario.';
+                } else {
+                    try {
+                        $stmt = $pdo->prepare('INSERT INTO users (role_id, username, password, fullname, email) VALUES (?, ?, ?, ?, ?)');
+                        $stmt->execute([
+                            $data['role_id'],
+                            $data['username'],
+                            password_hash($data['password'], PASSWORD_BCRYPT),
+                            $data['nombres'] . ' ' . $data['apellidos'],
+                            $data['email'],
+                        ]);
+                    } catch (PDOException $e) {
+                        $errorInfo = $e->errorInfo[1] ?? null;
+                        if (in_array($errorInfo, [1062, 19]) || stripos($e->getMessage(), 'duplicate') !== false) {
+                            $error = 'El nombre de usuario ya existe. Elige otro nombre de usuario.';
+                        } else {
+                            throw $e;
+                        }
+                    }
 
-                // Enviar correo de confirmación:
-                $to = $data['email'];
-                $subject = 'Bienvenido a Atlas - Registro exitoso';
-                $message = "Hola {$data['nombres']} {$data['apellidos']},\n\n" .
-                           "Tu usuario ha sido creado correctamente en la plataforma Atlas.\n" .
-                           "Datos de acceso:\n" .
-                           "Usuario: {$data['username']}\n" .
-                           "Rol: {$roleOptions[$data['role_id']]}\n" .
-                           "(Conserva tu contraseña en un lugar seguro).\n\n" .
-                           "Gracias por registrarte.\n" .
-                           "Equipo Atlas\n";
-                $headers = "From: atlas@tu-dominio.com\r\n" .
-                           "Reply-To: atlas@tu-dominio.com\r\n" .
-                           "Content-Type: text/plain; charset=UTF-8\r\n";
+                    if (empty($error)) {
+                        $to = $data['email'];
+                        $subject = 'Bienvenido a Atlas - Registro exitoso';
+                        $message = "Hola {$data['nombres']} {$data['apellidos']},\n\n" .
+                                   "Tu usuario ha sido creado correctamente en la plataforma Atlas.\n" .
+                                   "Datos de acceso:\n" .
+                                   "Usuario: {$data['username']}\n" .
+                                   "Rol: {$roleOptions[$data['role_id']]}\n" .
+                                   "(Conserva tu contraseña en un lugar seguro).\n\n" .
+                                   "Gracias por registrarte.\n" .
+                                   "Equipo Atlas\n";
+                        $headers = "From: atlas@tu-dominio.com\r\n" .
+                                   "Reply-To: atlas@tu-dominio.com\r\n" .
+                                   "Content-Type: text/plain; charset=UTF-8\r\n";
 
-                if (!mail($to, $subject, $message, $headers)) {
-                    $error = 'Usuario creado, pero no se pudo enviar el correo de confirmación. Verifique la configuración de email.';
+                        if (!mail($to, $subject, $message, $headers)) {
+                            $error = 'Usuario creado, pero no se pudo enviar el correo de confirmación. Verifique la configuración de email.';
+                        }
+
+                        if (empty($error)) {
+                            header('Location: index.php?c=dashboard&a=users');
+                            exit;
+                        }
+                    }
                 }
-
-                header('Location: index.php?c=dashboard&a=users');
-                exit;
+            } else {
+                $error = 'Complete todos los campos correctamente.';
             }
-
-            $error = 'Complete todos los campos correctamente.';
         }
 
         include __DIR__ . '/../views/dashboard/create_user.php';
@@ -311,15 +329,12 @@ class DashboardController
                             'result' => trim($_POST['result_column'] ?? ''),
                         ];
 
-                        $orderNumber = trim($_POST['order_number'] ?? '');
-                        $orderCapacity = intval($_POST['order_capacity'] ?? 0);
-
                         if (empty($columns['company'])) {
                             $error = 'Especifica la columna de empresa.';
                         } else {
                             // Procesar el archivo
                             try {
-                                $results = $this->processExcelFile($filePath, $columns, $fileExt, $orderNumber, $orderCapacity);
+                                $results = $this->processExcelFile($filePath, $columns, $fileExt);
                                 if (is_array($results) && !empty($results)) {
                                     $syncSummary = $this->syncCompaniesFromList(array_keys($results));
                                     $success = 'Archivo procesado correctamente. Se encontraron ' . count($results) . ' empresas. Los pacientes han sido clasificados y guardados en carpetas.';
@@ -469,18 +484,241 @@ class DashboardController
 
                         $filePath = $reportGuardaPath . '/' . $file;
                         if (is_file($filePath)) {
-                            $companies[$displayName]['company_dirs'][$companyDir]['folders']['REPORTE GUARDA']['files'][] = [
-                                'name' => $file,
-                                'size' => filesize($filePath),
-                                'modified' => date('d/m/Y H:i', filemtime($filePath))
-                            ];
-                        }
+                        $metadata = $this->getReportFileMetadata($filePath);
+                        $companies[$displayName]['company_dirs'][$companyDir]['folders']['REPORTE GUARDA']['files'][] = [
+                            'name' => $file,
+                            'size' => filesize($filePath),
+                            'modified' => date('d/m/Y H:i', filemtime($filePath)),
+                            'order_number' => $metadata['order_number'] ?? '',
+                            'order_capacity' => $metadata['order_capacity'] ?? '',
+                        ];
+                    }
                     }
                 }
             }
         }
 
         include __DIR__ . '/../views/dashboard/files.php';
+    }
+
+    public function updateClassifiedFileMetadata()
+    {
+        $this->ensureAuth();
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?c=dashboard&a=files&error=Solicitud inválida');
+            exit;
+        }
+
+        $company = $_POST['company'] ?? '';
+        $folder = $_POST['folder'] ?? '';
+        $file = $_POST['file'] ?? '';
+        $orderNumber = trim($_POST['order_number'] ?? '');
+        $orderCapacity = trim($_POST['order_capacity'] ?? '');
+
+        if (!$company || !$folder || !$file) {
+            header('Location: index.php?c=dashboard&a=files&error=' . urlencode('Parámetros inválidos.'));
+            exit;
+        }
+
+        $baseDir = __DIR__ . '/../empresas_clasificadas';
+        $filePath = $baseDir . '/' . $company . '/' . $folder . '/' . $file;
+
+        if (!file_exists($filePath) || !is_file($filePath)) {
+            header('Location: index.php?c=dashboard&a=files&error=' . urlencode('Archivo no encontrado.'));
+            exit;
+        }
+
+        try {
+            $this->saveReportFileMetadata($filePath, $orderNumber, $orderCapacity);
+            header('Location: index.php?c=dashboard&a=files&success=' . urlencode('Metadata de orden y cupos actualizada correctamente.'));
+            exit;
+        } catch (Exception $e) {
+            header('Location: index.php?c=dashboard&a=files&error=' . urlencode('No se pudo actualizar la metadata: ' . $e->getMessage()));
+            exit;
+        }
+    }
+
+    private function getReportFileMetadata(string $filePath): array
+    {
+        $metadata = ['order_number' => '', 'order_capacity' => ''];
+
+        if (!is_file($filePath)) {
+            return $metadata;
+        }
+
+        try {
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($filePath);
+            $spreadsheet = $reader->load($filePath);
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $metadataText = trim((string)$sheet->getCell('A3')->getValue());
+
+            if (stripos($metadataText, 'ORDEN:') !== false) {
+                if (preg_match('#ORDEN:\s*(\d+)\s*\/\s*CUPOS:\s*(\d+)#i', $metadataText, $matches)) {
+                    $metadata['order_number'] = trim($matches[1]);
+                    $metadata['order_capacity'] = trim($matches[2]);
+                }
+            }
+        } catch (Exception $e) {
+            // ignorar errores de lectura y devolver valores vacíos
+        }
+
+        return $metadata;
+    }
+
+    private function saveReportFileMetadata(string $filePath, string $orderNumber, string $orderCapacity)
+    {
+        if (!is_file($filePath)) {
+            throw new Exception('Archivo no encontrado');
+        }
+
+        try {
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($filePath);
+            $spreadsheet = $reader->load($filePath);
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $sheet->setCellValue('A3', 'ORDEN: ' . $orderNumber . ' / CUPOS: ' . $orderCapacity);
+            $this->applyOrderNumberToReportRows($sheet, $orderNumber, (int)$orderCapacity);
+
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer->save($filePath);
+        } catch (Exception $e) {
+            throw new Exception('No se pudo guardar la metadata: ' . $e->getMessage());
+        }
+    }
+
+    private function findEmptyOrderSlotRow($sheet, string $orderNumber, int $dataStartRow)
+    {
+        $highestRow = $sheet->getHighestRow();
+
+        for ($rowNum = $dataStartRow; $rowNum <= $highestRow; $rowNum++) {
+            $orderValue = trim((string)$sheet->getCell('A' . $rowNum)->getValue());
+            $nameValue = trim((string)$sheet->getCell('B' . $rowNum)->getValue());
+
+            if ($orderValue === $orderNumber && $nameValue === '') {
+                return $rowNum;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Buscar la primera fila reservada para cualquier orden (A tiene valor y B está vacío)
+     */
+    private function findFirstReservedSlot($sheet, int $dataStartRow)
+    {
+        $highestRow = $sheet->getHighestRow();
+
+        for ($rowNum = $dataStartRow; $rowNum <= $highestRow; $rowNum++) {
+            $orderValue = trim((string)$sheet->getCell('A' . $rowNum)->getValue());
+            $nameValue = trim((string)$sheet->getCell('B' . $rowNum)->getValue());
+
+            if ($orderValue !== '' && $nameValue === '') {
+                return $rowNum;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Contar cuántos pacientes ya están asignados (nombre no vacío) a una orden dada
+     */
+    private function countAssignedForOrder($sheet, string $orderNumber)
+    {
+        $count = 0;
+        $highestRow = $sheet->getHighestRow();
+
+        for ($rowNum = 5; $rowNum <= $highestRow; $rowNum++) {
+            $orderValue = trim((string)$sheet->getCell('A' . $rowNum)->getValue());
+            if ($orderValue !== $orderNumber) continue;
+            $nameValue = trim((string)$sheet->getCell('B' . $rowNum)->getValue());
+            if ($nameValue !== '') $count++;
+        }
+
+        return $count;
+    }
+
+    private function applyOrderNumberToReportRows($sheet, string $orderNumber, int $orderCapacity)
+    {
+        if (empty($orderNumber) || $orderCapacity <= 0) {
+            return;
+        }
+
+        $highestRow = $sheet->getHighestRow();
+        $assigned = 0;
+        $dataStartRow = 5; // Encabezados en la fila 4
+
+        for ($rowNum = $dataStartRow; $rowNum <= $highestRow; $rowNum++) {
+            $orderValue = trim((string)$sheet->getCell('A' . $rowNum)->getValue());
+            $rowHasData = false;
+            foreach (range('B', 'I') as $colLetter) {
+                $cellValue = trim((string)$sheet->getCell($colLetter . $rowNum)->getValue());
+                if ($cellValue !== '') {
+                    $rowHasData = true;
+                    break;
+                }
+            }
+
+            if (!$rowHasData) {
+                continue;
+            }
+
+            if ($orderValue !== '' && $orderValue !== $orderNumber) {
+                continue;
+            }
+
+            if ($orderValue === $orderNumber) {
+                $assigned++;
+                continue;
+            }
+
+            if ($assigned < $orderCapacity) {
+                $sheet->setCellValue('A' . $rowNum, $orderNumber);
+                $assigned++;
+            }
+        }
+
+        if ($assigned < $orderCapacity) {
+            $lastRowOrder = trim((string)$sheet->getCell('A' . $highestRow)->getValue());
+            // Agregar una fila separadora SOLO si la última fila contiene una orden distinta
+            if ($highestRow > 4 && $lastRowOrder !== '' && $lastRowOrder !== $orderNumber) {
+                $highestRow++;
+            }
+        }
+
+        while ($assigned < $orderCapacity) {
+            $highestRow++;
+            $sheet->setCellValue('A' . $highestRow, $orderNumber);
+            foreach (range('B', 'I') as $colLetter) {
+                $sheet->setCellValue($colLetter . $highestRow, '');
+            }
+            $assigned++;
+        }
+    }
+
+    private function rowHasAnyValue($sheet, int $rowNum)
+    {
+        foreach (range('A', 'I') as $colLetter) {
+            if (trim((string)$sheet->getCell($colLetter . $rowNum)->getValue()) !== '') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function cleanupCompanyReportFiles($reportDir, $company, $keepFilePath)
+    {
+        $baseName = $this->sanitizeFileName($company);
+        $pattern = $reportDir . '/' . $baseName . '*.xlsx';
+        foreach (glob($pattern) as $file) {
+            if ($file !== $keepFilePath && is_file($file)) {
+                @unlink($file);
+            }
+        }
     }
 
     private function normalizeClassifiedCompanyName(string $companyName)
@@ -792,6 +1030,35 @@ class DashboardController
                 // Obtener índices de columnas
                 
                 $highestRow = $worksheet->getHighestRow();
+                
+                // Intentar auto-detectar columnas si la columna de empresa no tiene datos
+                $foundCompanyData = false;
+                $testColIndices = $colIndices;
+                
+                // Primero intentar con las columnas especificadas
+                for ($rowNum = 2; $rowNum <= min($highestRow, 10); $rowNum++) {
+                    $company = $this->getCellValue($worksheet, $testColIndices['company'], $rowNum);
+                    if (!empty($company)) {
+                        $foundCompanyData = true;
+                        break;
+                    }
+                }
+                
+                // Si no encontró datos, intentar auto-detectar
+                if (!$foundCompanyData) {
+                    $testColIndices = $this->autoDetectColumns($worksheet);
+                    if ($testColIndices['company'] !== null) {
+                        $colIndices = $testColIndices;
+                        for ($rowNum = 2; $rowNum <= min($highestRow, 10); $rowNum++) {
+                            $company = $this->getCellValue($worksheet, $colIndices['company'], $rowNum);
+                            if (!empty($company)) {
+                                $foundCompanyData = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
                 for ($rowNum = 2; $rowNum <= $highestRow; $rowNum++) {
                     if ($this->rowHasCellFill($worksheet, $rowNum)) {
                         continue;
@@ -818,6 +1085,7 @@ class DashboardController
                         'exam_date' => $this->getCellValue($worksheet, $colIndices['exam_date'], $rowNum),
                         'result' => $this->getCellValue($worksheet, $colIndices['result'], $rowNum),
                         'exam' => 'Psicofisico',
+                        'order_number' => '',
                     ];
                     
                     $companiesData[$company][] = $patientData;
@@ -825,12 +1093,8 @@ class DashboardController
             }
 
             // Aplicar orden y capacidad de orden si se configuró
-            if (!empty($orderNumber) && $orderCapacity > 0) {
-                $companiesData = $this->applyOrderNumbersToCompanyData($companiesData, $orderNumber, $orderCapacity);
-            }
-
-            // Crear carpetas y archivos Excel
-            if (!empty($results)) {
+// Crear carpetas y archivos Excel
+            if (!empty($companiesData)) {
                 $this->createCompanyFolders($companiesData);
             }
 
@@ -840,6 +1104,75 @@ class DashboardController
         } catch (Exception $e) {
             throw $e;
         }
+    }
+
+    private function autoDetectColumns($worksheet)
+    {
+        $detected = [
+            'company' => null,
+            'name' => null,
+            'document' => null,
+            'phone' => null,
+            'gender' => null,
+            'birth' => null,
+            'exam_date' => null,
+            'result' => null,
+        ];
+        
+        $highestColumn = $worksheet->getHighestColumn();
+        $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
+        
+        // Palabras clave para detectar columnas
+        $keywords = [
+            'company' => ['empresa', 'company', 'client', 'cliente', 'organización', 'organizacion'],
+            'name' => ['nombre', 'name', 'candidato', 'candidate', 'paciente', 'apellido', 'person'],
+            'document' => ['documento', 'cedula', 'id', 'identificación', 'identificacion', 'cc', 'dni'],
+            'phone' => ['telefono', 'teléfono', 'phone', 'celular', 'mobile', 'tel', 'movil', 'móvil'],
+            'gender' => ['genero', 'género', 'sexo', 'gender', 'sex'],
+            'birth' => ['nacimiento', 'fecha_nacimiento', 'birth', 'fecha nac', 'dob'],
+            'exam_date' => ['fecha_examen', 'exam_date', 'fecha examen', 'fecha creacion', 'creation date', 'exam', 'fecha'],
+            'result' => ['resultado', 'result', 'estado', 'status', 'apto', 'outcome'],
+        ];
+        
+        // Escanear la primera fila para encabezados
+        for ($colIndex = 1; $colIndex <= min($highestColumnIndex, 30); $colIndex++) {
+            $columnLetter = $this->indexToColumnLetter($colIndex);
+            $header = strtolower(trim((string) $worksheet->getCell($columnLetter . '1')->getValue()));
+            
+            if (empty($header)) continue;
+            
+            // Buscar coincidencias
+            foreach ($keywords as $type => $words) {
+                if ($detected[$type] === null) {
+                    foreach ($words as $keyword) {
+                        if (strpos($header, $keyword) !== false) {
+                            $detected[$type] = $colIndex;
+                            break 2; // Romper ambos loops
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Si no se detectó empresa, usar la primera columna no vacía
+        if ($detected['company'] === null) {
+            for ($colIndex = 1; $colIndex <= min($highestColumnIndex, 10); $colIndex++) {
+                $columnLetter = $this->indexToColumnLetter($colIndex);
+                $hasData = false;
+                for ($rowNum = 2; $rowNum <= min($worksheet->getHighestRow(), 5); $rowNum++) {
+                    if (!empty(trim((string) $worksheet->getCell($columnLetter . $rowNum)->getValue()))) {
+                        $hasData = true;
+                        break;
+                    }
+                }
+                if ($hasData) {
+                    $detected['company'] = $colIndex;
+                    break;
+                }
+            }
+        }
+        
+        return $detected;
     }
 
     private function getColumnIndices($worksheet, $columns)
@@ -955,8 +1288,17 @@ class DashboardController
         // Crear directorio base si no existe
         if (!is_dir($baseDir)) {
             if (!@mkdir($baseDir, 0777, true)) {
-                throw new Exception('No se puede crear el directorio base. Verifica los permisos.');
+                throw new Exception('No se puede crear el directorio base. Verifica los permisos de la carpeta raíz.');
             }
+            // Asegurar permisos de escritura
+            if (!is_writable($baseDir)) {
+                @chmod($baseDir, 0777);
+            }
+        }
+        
+        // Verificar que el directorio base sea escribible
+        if (!is_writable($baseDir)) {
+            throw new Exception('El directorio base no tiene permisos de escritura. Contacta al administrador.');
         }
         
         $companyModel = new CompanyModel();
@@ -964,40 +1306,56 @@ class DashboardController
         
         // Crear carpeta para cada empresa
         foreach ($companiesData as $company => $patients) {
-            $existingDir = $this->findExistingCompanyDirectory($company, $baseDir);
-            if ($existingDir !== null) {
-                $companyDir = $baseDir . '/' . $existingDir;
-            } else {
-                $folderName = $companyModel->sanitizeCompanyFolderName($company);
-                $companyDir = $baseDir . '/' . $folderName;
-                if (!is_dir($companyDir)) {
-                    if (!@mkdir($companyDir, 0777, true)) {
-                        throw new Exception("No se puede crear la carpeta de empresa: $company");
+            try {
+                $existingDir = $this->findExistingCompanyDirectory($company, $baseDir);
+                if ($existingDir !== null) {
+                    $companyDir = $baseDir . '/' . $existingDir;
+                } else {
+                    $folderName = $companyModel->sanitizeCompanyFolderName($company);
+                    $companyDir = $baseDir . '/' . $folderName;
+                    
+                    if (!is_dir($companyDir)) {
+                        // Intentar crear con permisos específicos
+                        if (!@mkdir($companyDir, 0777, true)) {
+                            // Si falla, proporcionar más detalles
+                            $error = 'Carpeta: ' . $companyDir . ' | Empresa: ' . $company;
+                            throw new Exception("No se puede crear la carpeta de empresa: {$error}");
+                        }
+                        // Asegurar permisos de escritura
+                        @chmod($companyDir, 0777);
                     }
                 }
-            }
 
-            $reportDir = $companyDir . '/REPORTE GUARDA';
-            if (!is_dir($reportDir)) {
-                if (!@mkdir($reportDir, 0777, true)) {
-                    throw new Exception("No se puede crear la carpeta REPORTE GUARDA para: $company");
+                $reportDir = $companyDir . '/REPORTE GUARDA';
+                if (!is_dir($reportDir)) {
+                    if (!@mkdir($reportDir, 0777, true)) {
+                        throw new Exception("No se puede crear la carpeta REPORTE GUARDA para: {$company}");
+                    }
+                    @chmod($reportDir, 0777);
                 }
-            }
 
-            // Generar un solo archivo por empresa y conservar los nuevos pacientes en el mismo archivo
-            $fileName = $this->sanitizeFileName($company) . '.xlsx';
-            $filePath = $reportDir . '/' . $fileName;
-            $existingReportFile = $this->findExistingCompanyReportFile($reportDir, $company);
-            if ($existingReportFile !== $filePath && file_exists($existingReportFile)) {
-                if (!file_exists($filePath)) {
-                    rename($existingReportFile, $filePath);
+                // Generar un solo archivo por empresa y conservar los nuevos pacientes en el mismo archivo
+                $fileName = $this->sanitizeFileName($company) . '.xlsx';
+                $filePath = $reportDir . '/' . $fileName;
+                $existingReportFile = $this->findExistingCompanyReportFile($reportDir, $company);
+                if ($existingReportFile !== $filePath && file_exists($existingReportFile)) {
+                    if (!file_exists($filePath)) {
+                        rename($existingReportFile, $filePath);
+                    } else {
+                        @unlink($existingReportFile);
+                    }
                 }
-            }
 
-            try {
-                $this->generatePatientExcelFile($patients, $filePath, $company);
+                try {
+                    $this->generatePatientExcelFile($patients, $filePath, $company);
+                    $this->cleanupCompanyReportFiles($reportDir, $company, $filePath);
+                } catch (Exception $e) {
+                    throw new Exception("Error generar reporte para {$company}: " . $e->getMessage());
+                }
             } catch (Exception $e) {
-                throw new Exception("Error generar reporte para $company: " . $e->getMessage());
+                // Registrar el error pero continuar con las demás empresas
+                error_log('Error procesando empresa ' . $company . ': ' . $e->getMessage());
+                throw $e; // Re-lanzar para notificar al usuario
             }
         }
     }
@@ -1015,9 +1373,23 @@ class DashboardController
             $sheet = $spreadsheet->getActiveSheet();
             $sheet->setTitle('Reporte');
 
-            $headers = ['Nombre', 'Documento', 'Teléfono', 'Género', 'Fecha Nacimiento', 'Fecha Examen', 'Resultado', 'Tipo Examen'];
+            // Leer metadata de A3 para obtener el número de orden y cupos asignados
+            $metadataCell = (string)$sheet->getCell('A3')->getValue();
+            $orderNumber = '';
+            $orderCapacity = 0;
+            $patientsAssignedCount = 0;
+            
+            if (!empty($metadataCell) && strpos($metadataCell, 'ORDEN:') !== false) {
+                if (preg_match('/ORDEN:\s*(\d+)/', $metadataCell, $matches)) {
+                    $orderNumber = $matches[1];
+                }
+                if (preg_match('/CUPOS:\s*(\d+)/', $metadataCell, $matches)) {
+                    $orderCapacity = (int)$matches[1];
+                }
+            }
+
+            $headers = ['Orden', 'Nombre', 'Documento', 'Teléfono', 'Género', 'Fecha Nacimiento', 'Fecha Examen', 'Resultado', 'Tipo Examen'];
             $existingHighestRow = max(1, $sheet->getHighestRow());
-            $existingCompanyCell = trim((string)$sheet->getCell('A1')->getValue());
 
             if (!$this->isCompanyReportSheet($sheet, $empresa)) {
                 if (!empty($empresa)) {
@@ -1035,38 +1407,64 @@ class DashboardController
                 $rowNum = $startRow + 1;
             } else {
                 $sheet->setCellValue('A2', 'FECHA: ' . date('d/m/Y H:i:s'));
-
                 if (trim((string)$sheet->getCell('A4')->getValue()) !== 'Nombre') {
                     $sheet->fromArray([$headers], null, 'A4');
-                    $this->applyReportHeaderStyle($sheet, 4);
                 }
-
+                $this->applyReportHeaderStyle($sheet, 4);
                 $existingHighestRow = max(4, $sheet->getHighestRow());
                 $rowNum = $existingHighestRow + 1;
+                if ($existingHighestRow > 4 && $this->rowHasAnyValue($sheet, $existingHighestRow)) {
+                    $rowNum++;
+                }
             }
 
             if (!empty($patients)) {
                 foreach ($patients as $patient) {
-                    $sheet->setCellValue('A' . $rowNum, $patient['name']);
-                    $sheet->setCellValue('B' . $rowNum, $patient['document']);
-                    $sheet->setCellValue('C' . $rowNum, $patient['phone']);
-                    $sheet->setCellValue('D' . $rowNum, $patient['gender']);
-                    $sheet->setCellValue('E' . $rowNum, $patient['birth']);
-                    $sheet->setCellValue('F' . $rowNum, $patient['exam_date']);
-                    $sheet->setCellValue('G' . $rowNum, $patient['result']);
-                    $sheet->setCellValue('H' . $rowNum, $patient['exam']);
-                    $rowNum++;
+                    $assignedOrderNumber = $patient['order_number'] ?? '';
+                    $targetRow = $rowNum;
+
+                    if (empty($assignedOrderNumber)) {
+                        // 1) Priorizar ocupar espacios reservados existentes (celdas A con orden y columna B vacía)
+                        $reservedRow = $this->findFirstReservedSlot($sheet, 5);
+                        if ($reservedRow !== null) {
+                            $targetRow = $reservedRow;
+                            $assignedOrderNumber = trim((string)$sheet->getCell('A' . $reservedRow)->getValue());
+                        } else {
+                            // 2) Si no hay espacios reservados, intentar asignar a la orden de metadata si aún tiene cupos
+                            if (!empty($orderNumber) && $this->countAssignedForOrder($sheet, $orderNumber) < $orderCapacity) {
+                                $assignedOrderNumber = $orderNumber;
+                                $slotRow = $this->findEmptyOrderSlotRow($sheet, $assignedOrderNumber, 5);
+                                if ($slotRow !== null) {
+                                    $targetRow = $slotRow;
+                                }
+                            }
+                        }
+                    } else {
+                        // Si el paciente ya trae número de orden, intentar ubicar un slot reservado para esa orden
+                        $slotRow = $this->findEmptyOrderSlotRow($sheet, $assignedOrderNumber, 5);
+                        if ($slotRow !== null) {
+                            $targetRow = $slotRow;
+                        }
+                    }
+
+                    $sheet->setCellValue('A' . $targetRow, $assignedOrderNumber);
+                    $sheet->setCellValue('B' . $targetRow, $patient['name']);
+                    $sheet->setCellValue('C' . $targetRow, $patient['document']);
+                    $sheet->setCellValue('D' . $targetRow, $patient['phone']);
+                    $sheet->setCellValue('E' . $targetRow, $patient['gender']);
+                    $sheet->setCellValue('F' . $targetRow, $patient['birth']);
+                    $sheet->setCellValue('G' . $targetRow, $patient['exam_date']);
+                    $sheet->setCellValue('H' . $targetRow, $patient['result']);
+                    $sheet->setCellValue('I' . $targetRow, $patient['exam']);
+
+                    if ($targetRow === $rowNum) {
+                        $rowNum++;
+                    }
                 }
             }
-            
-            // Ajustar ancho de columnas
-            foreach (range('A', 'H') as $col) {
-                $sheet->getColumnDimension($col)->setAutoSize(true);
-            }
-            
-            // Guardar archivo
+
             $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-            
+
             // Validar que el directorio existe y es escribible
             $dir = dirname($filePath);
             if (!is_dir($dir)) {
@@ -1075,13 +1473,12 @@ class DashboardController
             if (!is_writable($dir)) {
                 throw new Exception("El directorio no tiene permisos de escritura: $dir");
             }
-            
+
             $writer->save($filePath);
-            
+
             if (!file_exists($filePath)) {
                 throw new Exception("El archivo no se guardó correctamente: $filePath");
             }
-            
         } catch (Exception $e) {
             throw new Exception("Error al generar el archivo Excel: " . $e->getMessage());
         }
@@ -1101,6 +1498,7 @@ class DashboardController
             foreach ($patients as $patient) {
                 if ($assigned < $orderCapacity) {
                     $patient['order_number'] = $orderNumber;
+                    $patient['order_capacity'] = $orderCapacity;
                     $assigned++;
                     $newPatients[] = $patient;
                     continue;
@@ -1141,7 +1539,7 @@ class DashboardController
             'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER],
         ];
 
-        for ($col = 'A'; $col <= 'H'; $col++) {
+        for ($col = 'A'; $col <= 'I'; $col++) {
             $sheet->getStyle($col . $startRow)->applyFromArray($headerStyle);
         }
     }
@@ -1233,6 +1631,7 @@ class DashboardController
                 'exam_date' => $row[$colIndices['exam_date'] ?? 6] ?? '',
                 'result' => $row[$colIndices['result'] ?? 7] ?? '',
                 'exam' => 'Psicofisico',
+                'order_number' => '',
             ];
 
             if (count($sampleRows) < 5) {

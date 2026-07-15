@@ -70,11 +70,30 @@ class CompanyModel extends BaseModel
     public function sanitizeCompanyFolderName(string $name)
     {
         $folder = trim($name);
-        // Replace backslashes and forward slashes with underscores
-        $folder = str_replace(['\\', '/'], '_', $folder);
+        
+        // Reemplazar caracteres especiales prohibidos en Windows/Linux
+        // < > : " / \ | ? * y algunos otros caracteres problemáticos
+        $folder = str_replace(
+            ['<', '>', ':', '"', '/', '\\', '|', '?', '*', '\0'],
+            '_',
+            $folder
+        );
+        
+        // Reemplazar caracteres acentuados y especiales que puedan causar problemas
+        $folder = preg_replace('/[^a-zA-Z0-9\s\-_()]/u', '', $folder);
+        
+        // Reemplazar espacios múltiples con un solo espacio
         $folder = preg_replace('/\s+/', ' ', $folder);
-        $folder = trim($folder);
-        return $folder;
+        
+        // Limitar longitud a 200 caracteres (Windows permite 255 pero dejamos margen)
+        $folder = substr(trim($folder), 0, 200);
+        
+        // Asegurar que no esté vacío
+        if (empty(trim($folder))) {
+            $folder = 'Empresa_Sin_Nombre';
+        }
+        
+        return trim($folder);
     }
 
     public function syncClassifiedCompanies()
@@ -347,5 +366,39 @@ class CompanyModel extends BaseModel
         } catch (Exception $e) {
             return ['success' => false, 'deleted_count' => $deletedCount, 'error' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Eliminar todas las empresas cuyo nombre consiste solo en dígitos.
+     * Retorna un resumen con conteos y nombres eliminados.
+     */
+    public function deleteNumericNamedCompanies()
+    {
+        $summary = ['deleted' => 0, 'failed' => 0, 'names' => []];
+
+        $stmt = $this->db->query("SELECT id, name FROM security_companies WHERE name REGEXP '^[0-9]+$'");
+        $rows = $stmt->fetchAll();
+
+        if (empty($rows)) {
+            return $summary;
+        }
+
+        foreach ($rows as $row) {
+            try {
+                $id = intval($row['id']);
+                $name = $row['name'];
+                // Usar el método delete para reutilizar eliminación de exámenes y carpeta
+                if ($this->delete($id)) {
+                    $summary['deleted']++;
+                    $summary['names'][] = $name;
+                } else {
+                    $summary['failed']++;
+                }
+            } catch (Exception $e) {
+                $summary['failed']++;
+            }
+        }
+
+        return $summary;
     }
 }
