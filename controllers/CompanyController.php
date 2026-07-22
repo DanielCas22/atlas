@@ -35,7 +35,7 @@ class CompanyController
             $contact = trim($_POST['contact'] ?? '');
 
             if (!empty($name)) {
-                $this->companyModel->add($name, $contact);
+                $this->companyModel->addIfNotExists($name, $contact);
                 header('Location: index.php?c=company&a=list');
                 exit;
             }

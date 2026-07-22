@@ -189,9 +189,12 @@ class ExamModel extends BaseModel
 
     public function findCompanyByName(string $name)
     {
-        $stmt = $this->db->prepare('SELECT id, name FROM security_companies WHERE name = ? LIMIT 1');
-        $stmt->execute([$name]);
-        return $stmt->fetch();
+        // Delegar a CompanyModel para aprovechar normalización y búsqueda robusta
+        if (!class_exists('CompanyModel')) {
+            require_once __DIR__ . '/CompanyModel.php';
+        }
+        $cm = new CompanyModel();
+        return $cm->findByName($name);
     }
 
     public function getExamTypes()
@@ -216,19 +219,18 @@ class ExamModel extends BaseModel
     public function syncCompanies(array $companyNames)
     {
         $companyNames = array_unique(array_map('trim', $companyNames));
-
-        $stmtSelect = $this->db->prepare('SELECT id FROM security_companies WHERE name = ?');
-        $stmtInsert = $this->db->prepare('INSERT INTO security_companies (name, contact) VALUES (?, ?)');
+        if (!class_exists('CompanyModel')) {
+            require_once __DIR__ . '/CompanyModel.php';
+        }
+        $cm = new CompanyModel();
 
         foreach ($companyNames as $company) {
             if ($company === '' || strcasecmp($company, 'laboratorios') === 0) {
                 continue;
             }
 
-            $stmtSelect->execute([$company]);
-            if (!$stmtSelect->fetch()) {
-                $stmtInsert->execute([$company, '']);
-            }
+            // addIfNotExists normaliza y evita duplicados
+            $cm->addIfNotExists($company);
         }
     }
 }

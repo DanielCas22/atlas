@@ -126,11 +126,12 @@ class CompanyModel extends BaseModel
 
         foreach ($classifiedFolders as $companyName => $companyDir) {
             try {
-                if ($this->findByName($companyName)) {
-                    $summary['existing']++;
-                } else {
-                    $this->add($companyName);
+                $id = $this->addIfNotExists($companyName);
+                if ($id) {
+                    // Si ya existía, addIfNotExists retorna su id; si fue agregada, retorna nuevo id
                     $summary['added']++;
+                } else {
+                    $summary['existing']++;
                 }
             } catch (Exception $e) {
                 error_log('Error sincronizando empresa desde archivos clasificados: ' . $e->getMessage());
@@ -184,6 +185,14 @@ class CompanyModel extends BaseModel
 
     public function add($name, $contact = null)
     {
+        $name = trim($name);
+        if ($name === '') {
+            return false;
+        }
+
+        // Normalizar nombre antes de insertar para evitar variantes que provoquen duplicados
+        $name = $this->normalizeCompanyName($name);
+
         $stmt = $this->db->prepare('INSERT INTO security_companies (name, contact) VALUES (?, ?)');
         return $stmt->execute([$name, $contact]);
     }
@@ -196,9 +205,30 @@ class CompanyModel extends BaseModel
 
     public function findByName($name)
     {
+        $name = trim($name);
+        if ($name === '') {
+            return false;
+        }
+
+        // Intento 1: búsqueda exacta rápida
         $stmt = $this->db->prepare('SELECT id, name, contact FROM security_companies WHERE name = ? LIMIT 1');
         $stmt->execute([$name]);
-        return $stmt->fetch();
+        $row = $stmt->fetch();
+        if ($row) {
+            return $row;
+        }
+
+        // Intento 2: comparar por nombre normalizado en PHP (maneja variantes/encoding)
+        $normalizedTarget = $this->normalizeCompanyName($name);
+        $stmt = $this->db->query('SELECT id, name, contact FROM security_companies');
+        $rows = $stmt->fetchAll();
+        foreach ($rows as $r) {
+            if ($this->normalizeCompanyName($r['name']) === $normalizedTarget) {
+                return $r;
+            }
+        }
+
+        return false;
     }
 
     public function addIfNotExists($name, $contact = null)
@@ -208,13 +238,16 @@ class CompanyModel extends BaseModel
             return false;
         }
 
-        $company = $this->findByName($name);
+        // Normalizar antes de buscar/crear
+        $normalized = $this->normalizeCompanyName($name);
+
+        $company = $this->findByName($normalized);
         if ($company) {
-            return $company['id'];
+            return intval($company['id']);
         }
 
-        $this->add($name, $contact);
-        return $this->db->lastInsertId();
+        $this->add($normalized, $contact);
+        return intval($this->db->lastInsertId());
     }
 
     public function delete($id)
