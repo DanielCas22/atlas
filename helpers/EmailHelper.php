@@ -56,6 +56,38 @@ class EmailHelper
     }
 
     /**
+     * Enviar un email de texto plano usando SMTP cuando esté configurado.
+     */
+    public function sendTextEmail($userEmail, $subject, $message)
+    {
+        if (!SMTPConfig::isConfigured()) {
+            return false;
+        }
+
+        if ($this->mailerAvailable && $this->mailer) {
+            try {
+                $this->mailer->addAddress($userEmail);
+                $this->mailer->Subject = $subject;
+                $this->mailer->isHTML(false);
+                $this->mailer->Body = $message;
+                $this->mailer->AltBody = $message;
+
+                $result = $this->mailer->send();
+
+                $this->mailer->clearAddresses();
+                $this->mailer->smtpClose();
+
+                return $result;
+            } catch (Exception $e) {
+                error_log('Error enviando email: ' . $e->getMessage());
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Enviar email de recuperación de contraseña
      */
     public function sendPasswordResetEmail($userEmail, $username, $resetToken)

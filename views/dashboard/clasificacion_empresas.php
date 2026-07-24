@@ -21,13 +21,13 @@
     <!-- Upload Section -->
     <div class="row mb-5">
         <div class="col-lg-8">
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-primary text-white py-3">
+            <div class="card shadow-sm border-0 bg-dark text-white">
+                <div class="card-header bg-black text-white py-3">
                     <h5 class="card-title mb-0">
                         <i class="bi bi-file-earmark-spreadsheet me-2"></i>Cargar Archivo Excel
                     </h5>
                 </div>
-                <div class="card-body p-4">
+                <div class="card-body p-4 text-white">
                     <?php if (isset($success)): ?>
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <i class="bi bi-check-circle me-2"></i><?php echo htmlspecialchars($success); ?>
@@ -68,56 +68,56 @@
                             <label for="companyColumn" class="form-label fw-semibold">
                                 <i class="bi bi-building me-2"></i>Columna de Empresa *
                             </label>
-                            <input type="text" class="form-control" id="companyColumn" name="company_column" placeholder="Ej: A, Empresa, Company" value="AB" required>
+                            <input type="text" class="form-control" id="companyColumn" name="company_column" placeholder="Ej: AC, Empresa, Company" value="AC" required>
                         </div>
 
                         <div class="mb-4">
                             <label for="nameColumn" class="form-label fw-semibold">
                                 <i class="bi bi-person me-2"></i>Columna de Nombre *
                             </label>
-                            <input type="text" class="form-control" id="nameColumn" name="name_column" placeholder="Ej: B, Nombre" value="D">
+                            <input type="text" class="form-control" id="nameColumn" name="name_column" placeholder="Ej: E, Nombre" value="E">
                         </div>
 
                         <div class="mb-4">
                             <label for="documentColumn" class="form-label fw-semibold">
                                 <i class="bi bi-card-text me-2"></i>Columna de Documento
                             </label>
-                            <input type="text" class="form-control" id="documentColumn" name="document_column" placeholder="Ej: C, Cedula" value="C">
+                            <input type="text" class="form-control" id="documentColumn" name="document_column" placeholder="Ej: D, Cedula" value="D">
                         </div>
 
                         <div class="mb-4">
                             <label for="phoneColumn" class="form-label fw-semibold">
                                 <i class="bi bi-telephone me-2"></i>Columna de Teléfono
                             </label>
-                            <input type="text" class="form-control" id="phoneColumn" name="phone_column" placeholder="Ej: D, Telefono" value="G">
+                            <input type="text" class="form-control" id="phoneColumn" name="phone_column" placeholder="Ej: H, Telefono" value="H">
                         </div>
 
                         <div class="mb-4">
                             <label for="genderColumn" class="form-label fw-semibold">
                                 <i class="bi bi-person-check me-2"></i>Columna de Género
                             </label>
-                            <input type="text" class="form-control" id="genderColumn" name="gender_column" placeholder="Ej: E, Genero" value="H">
+                            <input type="text" class="form-control" id="genderColumn" name="gender_column" placeholder="Ej: I, Genero" value="I">
                         </div>
 
                         <div class="mb-4">
                             <label for="birthColumn" class="form-label fw-semibold">
                                 <i class="bi bi-calendar-event me-2"></i>Columna de Fecha Nacimiento
                             </label>
-                            <input type="text" class="form-control" id="birthColumn" name="birth_column" placeholder="Ej: F, Fecha_Nacimiento" value="J">
+                            <input type="text" class="form-control" id="birthColumn" name="birth_column" placeholder="Ej: K, Fecha_Nacimiento" value="K">
                         </div>
 
                         <div class="mb-4">
                             <label for="examDateColumn" class="form-label fw-semibold">
                                 <i class="bi bi-calendar2-event me-2"></i>Columna de Fecha de Examen
                             </label>
-                            <input type="text" class="form-control" id="examDateColumn" name="exam_date_column" placeholder="Ej: G, Fecha_Examen" value="W">
+                            <input type="text" class="form-control" id="examDateColumn" name="exam_date_column" placeholder="Ej: X, Fecha_Examen" value="X">
                         </div>
 
                         <div class="mb-4">
                             <label for="resultColumn" class="form-label fw-semibold">
                                 <i class="bi bi-check2-circle me-2"></i>Columna de Resultado
                             </label>
-                            <input type="text" class="form-control" id="resultColumn" name="result_column" placeholder="Ej: H, Resultado, Estado" value="U">
+                            <input type="text" class="form-control" id="resultColumn" name="result_column" placeholder="Ej: V, Resultado, Estado" value="V">
                         </div>
 
 

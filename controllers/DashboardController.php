@@ -263,6 +263,9 @@ class DashboardController
                     }
 
                     if (empty($error)) {
+                        require_once __DIR__ . '/../config/SMTPConfig.php';
+                        require_once __DIR__ . '/../helpers/EmailHelper.php';
+
                         $to = $data['email'];
                         $subject = 'Bienvenido a Atlas - Registro exitoso';
                         $message = "Hola {$data['nombres']} {$data['apellidos']},\n\n" .
@@ -273,11 +276,9 @@ class DashboardController
                                    "(Conserva tu contraseña en un lugar seguro).\n\n" .
                                    "Gracias por registrarte.\n" .
                                    "Equipo Atlas\n";
-                        $headers = "From: atlas@tu-dominio.com\r\n" .
-                                   "Reply-To: atlas@tu-dominio.com\r\n" .
-                                   "Content-Type: text/plain; charset=UTF-8\r\n";
 
-                        if (!mail($to, $subject, $message, $headers)) {
+                        $emailHelper = new EmailHelper();
+                        if (!$emailHelper->sendTextEmail($to, $subject, $message)) {
                             $error = 'Usuario creado, pero no se pudo enviar el correo de confirmación. Verifique la configuración de email.';
                         }
 
@@ -319,14 +320,14 @@ class DashboardController
                         $error = 'Formato de archivo no soportado. Usa Excel (.xlsx, .xls) o CSV.';
                     } else {
                         $columns = [
-                            'company' => trim($_POST['company_column'] ?? 'A'),
-                            'name' => trim($_POST['name_column'] ?? 'B'),
-                            'document' => trim($_POST['document_column'] ?? ''),
-                            'phone' => trim($_POST['phone_column'] ?? ''),
-                            'gender' => trim($_POST['gender_column'] ?? ''),
-                            'birth' => trim($_POST['birth_column'] ?? ''),
-                            'exam_date' => trim($_POST['exam_date_column'] ?? ''),
-                            'result' => trim($_POST['result_column'] ?? ''),
+                            'company' => trim($_POST['company_column'] ?? 'AC'),
+                            'name' => trim($_POST['name_column'] ?? 'E'),
+                            'document' => trim($_POST['document_column'] ?? 'D'),
+                            'phone' => trim($_POST['phone_column'] ?? 'H'),
+                            'gender' => trim($_POST['gender_column'] ?? 'I'),
+                            'birth' => trim($_POST['birth_column'] ?? 'K'),
+                            'exam_date' => trim($_POST['exam_date_column'] ?? 'X'),
+                            'result' => trim($_POST['result_column'] ?? 'V'),
                         ];
 
                         if (empty($columns['company'])) {
@@ -683,9 +684,14 @@ class DashboardController
 
         if ($assigned < $orderCapacity) {
             $lastRowOrder = trim((string)$sheet->getCell('A' . $highestRow)->getValue());
-            // Agregar una fila separadora SOLO si la última fila contiene una orden distinta
+            // Si hay una orden distinta inmediatamente después, insertar fila en blanco
             if ($highestRow > 4 && $lastRowOrder !== '' && $lastRowOrder !== $orderNumber) {
-                $highestRow++;
+                $rowBelow = $highestRow + 1;
+                if ($this->rowHasAnyValue($sheet, $rowBelow) === false) {
+                    // Si la fila siguiente ya está vacía, no duplicar
+                } else {
+                    $sheet->insertNewRowBefore($rowBelow, 1);
+                }
             }
         }
 
@@ -696,6 +702,35 @@ class DashboardController
                 $sheet->setCellValue($colLetter . $highestRow, '');
             }
             $assigned++;
+        }
+
+        $this->insertBlankRowsBetweenOrderGroups($sheet, $dataStartRow, $sheet->getHighestRow());
+    }
+
+    private function insertBlankRowsBetweenOrderGroups($sheet, int $dataStartRow, int $highestRow)
+    {
+        $rows = [];
+        for ($rowNum = $dataStartRow; $rowNum <= $highestRow; $rowNum++) {
+            if ($this->rowHasAnyValue($sheet, $rowNum)) {
+                $rows[] = $rowNum;
+            }
+        }
+
+        $prevOrder = null;
+        for ($i = count($rows) - 1; $i >= 0; $i--) {
+            $rowNum = $rows[$i];
+            $orderValue = trim((string)$sheet->getCell('A' . $rowNum)->getValue());
+            $orderKey = $orderValue === '' ? '__UNASSIGNED__' : $orderValue;
+
+            if ($prevOrder !== null && $orderKey !== $prevOrder) {
+                $insertBefore = $rowNum + 1;
+                $isBlankAlready = !$this->rowHasAnyValue($sheet, $insertBefore);
+                if (!$isBlankAlready) {
+                    $sheet->insertNewRowBefore($insertBefore, 1);
+                }
+            }
+
+            $prevOrder = $orderKey;
         }
     }
 

@@ -48,7 +48,7 @@
                         <input type="hidden" name="c" value="company">
                         <input type="hidden" name="a" value="list">
 
-                        <div class="col-md-8">
+                        <div class="col-md-6">
                             <label for="searchInput" class="form-label fw-semibold">
                                 Buscar Empresa
                             </label>
@@ -65,6 +65,17 @@
                                     </a>
                                 <?php endif; ?>
                             </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label for="orderInput" class="form-label fw-semibold">Buscar por Orden</label>
+                            <input type="text" class="form-control" id="orderInput" name="order"
+                                   value="<?= htmlspecialchars($_GET['order'] ?? '') ?>"
+                                   placeholder="Ej: 12345">
+                        </div>
+
+                        <div class="col-md-4 d-none">
+                            <!-- Espacio vacío para mantener el layout si es necesario -->
                         </div>
 
                         <div class="col-md-4 d-none">

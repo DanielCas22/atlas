@@ -176,6 +176,24 @@ class CompanyModel extends BaseModel
         return $stmt->fetchAll();
     }
 
+    /**
+     * Buscar empresas que tengan exámenes con un número de orden específico
+     * @param string $orderNumber
+     * @return array
+     */
+    public function searchByOrder(string $orderNumber)
+    {
+        $sql = 'SELECT sc.id, sc.name, COUNT(e.id) as exam_count
+                FROM security_companies sc
+                JOIN exams e ON sc.id = e.company_id
+                WHERE e.order_number = ?
+                GROUP BY sc.id, sc.name
+                ORDER BY sc.name';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$orderNumber]);
+        return $stmt->fetchAll();
+    }
+
     public function find($id)
     {
         $stmt = $this->db->prepare('SELECT id, name, contact FROM security_companies WHERE id = ?');

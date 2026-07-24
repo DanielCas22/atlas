@@ -17,7 +17,12 @@ class CompanyController
         $this->companyModel->syncClassifiedCompanies();
 
         $search = trim($_GET['search'] ?? '');
-        if (!empty($search)) {
+        $order = trim($_GET['order'] ?? '');
+
+        // Priorizar búsqueda por número de orden si se proporciona
+        if ($order !== '') {
+            $companies = $this->companyModel->searchByOrder($order);
+        } elseif (!empty($search)) {
             $companies = $this->companyModel->searchByName($search);
         } else {
             $companies = $this->companyModel->allWithExamCounts();

@@ -25,9 +25,9 @@ class SMTPConfig
     // Cambiar a true para habilitar envío de emails
     const ENABLED = true;
 
-    // Cambia a 'mailtrap', 'gmail' o 'sendgrid'
-    // Usa 'sendgrid' para enviar correos reales desde un proveedor SMTP externo
-    const PROVIDER = 'sendgrid';
+    // Cambia a 'mailtrap', 'gmail', 'sendgrid' o 'auto'.
+    // Usa 'auto' para que en localhost se use Mailtrap y en producción un proveedor real.
+    const PROVIDER = 'auto';
 
     // URL base de la aplicación, úsala cuando la app esté en un subdirectorio de htdocs
     const BASE_URL = 'http://localhost/atlas';

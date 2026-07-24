@@ -175,3 +175,7 @@
 [2026-07-22 16:48:07] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":444,"exam_type_id":4,"candidates_count":18,"order_number":"1078964"}
 [2026-07-22 17:38:17] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":375,"exam_type_id":4,"candidates_count":12,"order_number":"1080868"}
 [2026-07-22 18:08:25] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":382,"exam_type_id":4,"candidates_count":10,"order_number":"1121123"}
+[2026-07-22 20:23:18] [INFO] Exams list displayed | Context: {"count":2380,"status_filter":null}
+[2026-07-22 22:30:35] [INFO] Exams list displayed | Context: {"count":2380,"status_filter":null}
+[2026-07-23 16:01:58] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":405,"exam_type_id":4,"candidates_count":20,"order_number":"450"}
+[2026-07-23 16:43:19] [AUDIT] User 'Array' performed action: Exam added | Context: {"company_id":405,"exam_type_id":4,"candidates_count":10,"order_number":"464"}
