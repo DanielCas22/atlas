@@ -29,6 +29,44 @@ class UserModel extends BaseModel
         return intval($row['total'] ?? 0);
     }
 
+    public function ensureDefaultUsers()
+    {
+        $defaults = [
+            [
+                'username' => 'admin',
+                'password' => 'admin123',
+                'fullname' => 'Admin Atlas',
+                'email' => 'admin@atlas.local',
+                'role_id' => 1,
+            ],
+            [
+                'username' => 'programador',
+                'password' => 'daniel913',
+                'fullname' => 'Programador Atlas',
+                'email' => 'programador@atlas.local',
+                'role_id' => 1,
+            ],
+        ];
+
+        foreach ($defaults as $user) {
+            $stmt = $this->db->prepare('SELECT id, password FROM users WHERE username = ? LIMIT 1');
+            $stmt->execute([$user['username']]);
+            $existing = $stmt->fetch();
+            $hash = password_hash($user['password'], PASSWORD_BCRYPT);
+
+            if (!$existing) {
+                $stmt = $this->db->prepare('INSERT INTO users (role_id, username, password, fullname, email) VALUES (?, ?, ?, ?, ?)');
+                $stmt->execute([$user['role_id'], $user['username'], $hash, $user['fullname'], $user['email']]);
+                continue;
+            }
+
+            if (empty($existing['password']) || !password_verify($user['password'], $existing['password'])) {
+                $stmt = $this->db->prepare('UPDATE users SET password = ?, fullname = ?, email = ?, role_id = ? WHERE id = ?');
+                $stmt->execute([$hash, $user['fullname'], $user['email'], $user['role_id'], $existing['id']]);
+            }
+        }
+    }
+
     public function update(int $id, array $data)
     {
         $fields = [];

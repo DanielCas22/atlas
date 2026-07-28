@@ -74,8 +74,8 @@ INSERT IGNORE INTO roles (id,name,description) VALUES
 (3,'OPERADOR','Operador de registro');
 
 INSERT IGNORE INTO users (role_id,username,password,fullname,email) VALUES
-(1,'admin', '$2y$10$K1u/RUAi3z1JczLZG2vWbO8cM4Z4X2VorPM0z6Oe9bG0M.dmy9Fn6', 'Admin Atlas', 'admin@atlas.local'),
-(1,'programador', '$2y$10$I2j9ZgVoPHBVisBAkPCNEuCgwSlBxsDvMNSMseKFINpgxt1xnIwyW', 'Programador Atlas', 'programador@atlas.local');
+(1,'admin', '$2y$10$/SlrvKTjPzSbw50Wv6z5KOtH.kC85.7ZyuJL.aEpQ7CPeprZpjY0y', 'Admin Atlas', 'admin@atlas.local'),
+(1,'programador', '$2y$10$ZKD5M6TthbjXFdDkxu9WKOVQiiCw7zB93pueM06/4nYrpwk2vuxLa', 'Programador Atlas', 'programador@atlas.local');
 -- password: admin123 / programador: daniel913
 
 INSERT IGNORE INTO exam_types (name,description) VALUES
